@@ -446,7 +446,7 @@ function loadDemoData() {
     const minutes = completed ? Math.floor(Math.random() * 10) + routine.duration.split('-')[0].replace(/\D/g,'') * 1 : Math.floor(Math.random() * 10) + 8;
     const series = completed ? Math.floor(Math.random() * 5) + 12 : Math.floor(Math.random() * 8) + 3;
 
-    demoSessions.push({
+    const s = {
       id: `demo_${i}`,
       date: d.toISOString().split('T')[0],
       routineName: routine.name,
@@ -459,8 +459,13 @@ function loadDemoData() {
       routineCompleted: completed,
       pain: 'ninguna',
       notes: '',
-      score: calculateScore({ energy, minutesTracker: parseInt(minutes), seriesCompleted: series, exercisesCompleted: completed ? routine.exercises.length : Math.floor(routine.exercises.length / 2), exercisesTotal: routine.exercises.length, routineCompleted: completed })
-    });
+      scoreData: null,
+      score: 0
+    };
+    const sd = calculateScore(s);
+    s.scoreData = sd;
+    s.score = sd.total;
+    demoSessions.push(s);
   }
 
   APP.sessions = demoSessions;
@@ -508,20 +513,85 @@ function formatTime(seconds) {
 }
 
 function calculateScore(session) {
-  let score = 0;
-  if (session.routineCompleted) score += 40;
-  else if (session.exercisesCompleted >= session.exercisesTotal * 0.6) score += 25;
-  else if (session.exercisesCompleted > 0) score += 10;
+  // ── 5 componentes con pesos calibrados ──────────────────
+  // 1. Completion  (0-35): porcentaje de ejercicios realizados
+  // 2. Volume      (0-25): series vs. total planeado
+  // 3. Time        (0-20): minutos vs. meta diaria
+  // 4. Energy      (0-10): energía reportada (1-5 → 2-10)
+  // 5. Consistency (0-10): bonus por racha activa
 
-  if (session.energy) score += session.energy * 5; // max 25
-  if (session.minutesTracker >= APP.settings.dailyMinTarget) score += 20;
-  else score += Math.round((session.minutesTracker / APP.settings.dailyMinTarget) * 15);
+  let completion = 0;
+  const exRatio = session.exercisesTotal > 0
+    ? session.exercisesCompleted / session.exercisesTotal : 0;
 
-  const seriesRatio = Math.min(1, session.seriesCompleted / APP.settings.dailySeriesTarget);
-  score += Math.round(seriesRatio * 15);
+  if (session.routineCompleted || exRatio >= 1)   completion = 35;
+  else if (exRatio >= 0.8)                        completion = 30;
+  else if (exRatio >= 0.6)                        completion = 22;
+  else if (exRatio >= 0.4)                        completion = 14;
+  else if (exRatio >= 0.2)                        completion =  7;
+  else if (session.exercisesCompleted > 0)        completion =  3;
 
-  return Math.min(100, Math.round(score));
+  // Volume: series reales vs. planeadas de la rutina
+  const routine    = WEEKLY_ROUTINES[new Date().getDay()];
+  const plannedSets = (routine.exercises || []).reduce((s, e) => s + (e.sets || 0), 0);
+  const seriesRatio = plannedSets > 0
+    ? Math.min(1, session.seriesCompleted / plannedSets) : 0;
+  const volume = Math.round(seriesRatio * 25);
+
+  // Time vs. meta
+  const targetMin = APP.settings.dailyMinTarget;
+  const timeRatio = targetMin > 0
+    ? Math.min(1, session.minutesTracker / targetMin) : 0;
+  const time = Math.round(timeRatio * 20);
+
+  // Energy (1→2, 2→4, 3→6, 4→8, 5→10)
+  const energy = session.energy ? session.energy * 2 : 0;
+
+  // Consistency bonus
+  const streak = getStreak();
+  const consistency = streak >= 7 ? 10
+    : streak >= 5 ? 8
+    : streak >= 3 ? 5
+    : streak >= 1 ? 3 : 0;
+
+  const total = completion + volume + time + energy + consistency;
+  return {
+    total:      Math.min(100, Math.round(total)),
+    completion: Math.min(35, completion),
+    volume:     Math.min(25, volume),
+    time:       Math.min(20, time),
+    energy:     Math.min(10, energy),
+    consistency:Math.min(10, consistency)
+  };
 }
+
+// ── calculateLoad: basada en el volumen real de la rutina ──
+function calculateLoad(exercises, mode) {
+  if (!exercises || exercises.length === 0) return 'suave';
+
+  const totalSets = exercises.reduce((s, e) => s + (e.sets || 0), 0);
+  const avgRest   = exercises.reduce((s, e) => s + (e.rest || 60), 0) / exercises.length;
+
+  // Clasificación base por volumen + densidad de trabajo
+  let load;
+  if (totalSets >= 22 || (totalSets >= 16 && avgRest <= 45))      load = 'alta';
+  else if (totalSets >= 13 || (totalSets >= 10 && avgRest <= 50)) load = 'moderada';
+  else                                                              load = 'suave';
+
+  // Ajuste por modo del usuario
+  if (mode === 'intenso' && load === 'suave')    load = 'moderada';
+  if (mode === 'intenso' && load === 'moderada') load = 'alta';
+  if (mode === 'ligero'  && load === 'alta')     load = 'moderada';
+  if (mode === 'ligero'  && load === 'moderada') load = 'suave';
+
+  return load;
+}
+
+const LOAD_DESC = {
+  suave:    'Sesión ligera: movilidad y activación. Perfecta para recuperar.',
+  moderada: 'Carga equilibrada: fuerza + técnica. Tu zona de progreso.',
+  alta:     'Sesión exigente: máximo volumen. Asegúrate de dormir y comer bien.'
+};
 
 function getScoreLabel(score) {
   if (score >= 85) return 'Excelente';
@@ -650,7 +720,8 @@ function getRecommendations() {
 // ═══════════════════════════════════════════════════════════
 
 function navigateTo(page) {
-  // Close modal if open
+  // Close modal and stop any running timer
+  stopTimer();
   document.getElementById('timer-modal').classList.add('hidden');
 
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -738,6 +809,7 @@ function renderToday() {
 
   APP.currentRoutineExercises = exercises;
   APP.totalExercisesToday = exercises.length;
+  _lastRenderedExIds = ''; // fresh page load → full draw with stagger
 
   document.getElementById('today-day-label').textContent = dayNames[dow].toUpperCase();
   document.getElementById('today-routine-name').textContent = routine.name;
@@ -796,39 +868,66 @@ function renderSundayView() {
   });
 }
 
-function renderExerciseList(exercises) {
+// Track last rendered exercises to enable partial updates
+let _lastRenderedExIds = '';
+
+function renderExerciseList(exercises, forceRedraw = false) {
   const list = document.getElementById('today-exercise-list');
+  const newIds = exercises.map(e => e.id + (APP.completedExercises.has(e.id) ? '_done' : '')).join(',');
+
+  // Smart partial update: if only completion state changed, just update individual cards
+  if (!forceRedraw && _lastRenderedExIds.split(',').map(x => x.split('_done')[0]).join(',') === exercises.map(e => e.id).join(',')) {
+    exercises.forEach(ex => {
+      const card = document.getElementById(`ex-card-${ex.id}`);
+      if (!card) return;
+      const isDone = APP.completedExercises.has(ex.id);
+      const wasMarked = card.classList.contains('completed');
+      if (isDone !== wasMarked) {
+        card.className = `exercise-card stagger-item${isDone ? ' completed' : ''}`;
+        const statusEl = card.querySelector('.ex-status');
+        if (statusEl) statusEl.textContent = isDone ? '✓' : '';
+        const doneBtn = card.querySelector('.ex-done-btn');
+        if (doneBtn) doneBtn.textContent = isDone ? '✓ Hecho' : 'Completado';
+      }
+    });
+    _lastRenderedExIds = newIds;
+    updateTodayProgress();
+    return;
+  }
+
+  // Full redraw with stagger entrance
   list.innerHTML = '';
+  _lastRenderedExIds = newIds;
 
   exercises.forEach((ex, i) => {
     const isDone = APP.completedExercises.has(ex.id);
     const card = document.createElement('div');
-    card.className = `exercise-card${isDone ? ' completed' : ''}`;
+    card.className = `exercise-card stagger-item${isDone ? ' completed' : ''}`;
     card.id = `ex-card-${ex.id}`;
 
-    const repStr = ex.reps ? `${ex.reps} reps` : (ex.duration || '');
+    const repStr  = ex.reps ? `${ex.reps} reps` : (ex.duration || '');
     const setsStr = `${ex.sets} series`;
+    const restStr = ex.rest ? `${ex.rest}s descanso` : '';
 
     card.innerHTML = `
       <div class="ex-head">
         <div class="ex-name">
-          <span style="color:var(--text-muted);font-size:12px;margin-right:4px">${i+1}.</span>
-          ${ex.name}
+          <span style="color:var(--text-muted);font-size:11px;margin-right:5px;font-family:var(--font-ui)">${String(i+1).padStart(2,'0')}</span>${ex.name}
         </div>
         <div class="ex-status">${isDone ? '✓' : ''}</div>
       </div>
       <div class="ex-meta">
-        <span style="color:var(--aqua)">${setsStr}</span>
+        <span style="color:var(--aqua);font-weight:700">${setsStr}</span>
         <span class="sep">·</span>
         <span>${repStr}</span>
-        ${ex.rest ? `<span class="sep">·</span><span>Descanso ${ex.rest}s</span>` : ''}
+        ${restStr ? `<span class="sep">·</span><span>${restStr}</span>` : ''}
       </div>
       <div class="ex-note">${ex.note}</div>
       <div class="ex-actions">
-        <button class="btn btn-primary btn-sm" style="flex:1" onclick="openTimerModal(${i})">
+        <button class="btn btn-primary btn-sm" style="flex:2" onclick="openTimerModal(${i})">
           ▶ Iniciar
         </button>
-        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="markExerciseDone('${ex.id}')">
+        <button class="btn btn-ghost btn-sm ex-done-btn" style="flex:1" onclick="markExerciseDone('${ex.id}')">
           ${isDone ? '✓ Hecho' : 'Completado'}
         </button>
       </div>
@@ -847,21 +946,30 @@ function updateTodayProgress() {
 }
 
 function markExerciseDone(exId) {
-  if (APP.completedExercises.has(exId)) {
-    APP.completedExercises.delete(exId);
-  } else {
-    APP.completedExercises.add(exId);
-  }
+  const wasDone = APP.completedExercises.has(exId);
+  if (wasDone) APP.completedExercises.delete(exId);
+  else         APP.completedExercises.add(exId);
+
   saveToStorage();
-  renderToday();
-  showToast(APP.completedExercises.has(exId) ? '✓ Ejercicio completado' : 'Ejercicio desmarcado', 'success');
+
+  // Smart update: only patch the card, skip full re-render
+  const exercises = APP.currentRoutineExercises;
+  if (exercises.length > 0) {
+    renderExerciseList(exercises); // uses partial-update path internally
+  }
+
+  // Show toast only when marking as done (not undoing)
+  if (!wasDone) showToast('✓ Completado', 'success');
+
+  updateTodayProgress();
 }
 
 function completeRoutine() {
-  const todaySession = getTodaySession();
   const routine = getTodayRoutine();
   const exercises = APP.currentRoutineExercises;
   const exDone = APP.completedExercises.size;
+
+  const plannedSets = exercises.reduce((s, e) => s + e.sets, 0);
 
   const session = {
     id: 'session_' + Date.now(),
@@ -870,17 +978,18 @@ function completeRoutine() {
     sessionType: 'casa',
     energy: 3,
     minutesTracker: parseInt(routine.duration) || 25,
-    seriesCompleted: exercises.reduce((s, e) => s + e.sets, 0),
+    seriesCompleted: Math.round(plannedSets * (exDone / (exercises.length || 1))),
     exercisesCompleted: exDone,
     exercisesTotal: exercises.length,
     routineCompleted: exDone >= exercises.length * 0.8,
     pain: 'ninguna',
     notes: '',
-    score: 0
+    scoreData: null
   };
-  session.score = calculateScore(session);
+  const scoreData = calculateScore(session);
+  session.scoreData = scoreData;
+  session.score = scoreData.total;
 
-  // Remove any existing today session
   APP.sessions = APP.sessions.filter(s => s.date !== getTodayKey());
   APP.sessions.push(session);
   saveToStorage();
@@ -892,169 +1001,322 @@ function completeRoutine() {
 // Mode selector (in today page)
 function setTodayMode(mode) {
   APP.currentMode = mode;
+  _lastRenderedExIds = ''; // force full redraw on mode change
   document.querySelectorAll('[data-mode]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.mode === mode);
   });
-  renderExerciseList(getModifiedExercises(getTodayRoutine().exercises, mode));
+  renderExerciseList(getModifiedExercises(getTodayRoutine().exercises, mode), true);
 }
 
 // ═══════════════════════════════════════════════════════════
 // 9. TIMER MODAL
 // ═══════════════════════════════════════════════════════════
+//
+// MÁQUINA DE ESTADOS:
+//
+//  idle ──[Iniciar serie]──► work ──[Completar serie]──► rest_running
+//                              ▲                              │
+//                              │                    (cuenta regresiva)
+//                              │                              │
+//                              │                       rest_done
+//                              │                    (botón habilitado)
+//                              └──[Completar descanso]────────┘
+//
+//  Si ya se hicieron todas las series → done (ejercicio completado)
+//
+// ═══════════════════════════════════════════════════════════
+
+// Guarda el total de segundos de descanso del ejercicio actual
+// para poder mostrar el arco del círculo izquierdo durante el countdown
+let REST_TOTAL_SECS = 0;
+
+function stopTimer() {
+  clearInterval(APP.timerInterval);
+  APP.timerInterval = null;
+  APP.timerRunning = false;
+}
 
 function openTimerModal(exerciseIndex) {
   const exercises = APP.currentRoutineExercises;
   if (exerciseIndex >= exercises.length) return;
 
-  APP.currentExerciseIndex = exerciseIndex;
-  APP.currentExercise = exercises[exerciseIndex];
-  APP.currentSeriesCount = 0;
-  APP.timerSeconds = 0;
-  APP.timerRunning = false;
-  APP.timerState = 'idle';
+  stopTimer();
 
-  if (APP.timerInterval) clearInterval(APP.timerInterval);
+  APP.currentExerciseIndex = exerciseIndex;
+  APP.currentExercise     = exercises[exerciseIndex];
+  APP.currentSeriesCount  = 0;
+  APP.timerSeconds        = 0;
+  APP.timerState          = 'idle'; // idle | work | rest_running | rest_done | done
+  REST_TOTAL_SECS         = 0;
 
   updateTimerModal();
   document.getElementById('timer-modal').classList.remove('hidden');
 }
 
 function updateTimerModal() {
-  const ex = APP.currentExercise;
-  const exercises = APP.currentRoutineExercises;
+  const ex  = APP.currentExercise;
   const idx = APP.currentExerciseIndex;
+  const exercises = APP.currentRoutineExercises;
 
-  document.getElementById('modal-ex-order').textContent = `Ejercicio ${idx + 1} de ${exercises.length}`;
+  // ── Textos de cabecera ──────────────────────────────────
+  document.getElementById('modal-ex-order').textContent =
+    `Ejercicio ${idx + 1} de ${exercises.length}`;
   document.getElementById('modal-ex-name').textContent = ex.name;
 
   const repStr = ex.reps ? `${ex.reps} reps` : (ex.duration || '');
-  document.getElementById('modal-ex-target').textContent = `${ex.sets} series · ${repStr}`;
-  document.getElementById('modal-rest-val').textContent = ex.rest ? `${ex.rest}s` : '—';
+  document.getElementById('modal-ex-target').textContent =
+    `${ex.sets} series · ${repStr}`;
+  document.getElementById('modal-rest-val').textContent =
+    ex.rest ? `${ex.rest}s` : '—';
   document.getElementById('modal-reps-val').textContent = repStr;
-  document.getElementById('modal-ex-progress').textContent = `${idx + 1}/${exercises.length}`;
+  document.getElementById('modal-ex-progress').textContent =
+    `${idx + 1}/${exercises.length}`;
 
-  // Update series circle
+  // ── Círculo derecho: series ─────────────────────────────
   document.getElementById('series-current').textContent = APP.currentSeriesCount;
-  document.getElementById('series-total').textContent = ex.sets;
+  document.getElementById('series-total').textContent   = ex.sets;
 
+  // r=66 → circumference = 2π×66 ≈ 415
+  const CIRC = 415;
   const seriesPct = APP.currentSeriesCount / ex.sets;
-  const circumference = 427;
   document.getElementById('series-fill').style.strokeDashoffset =
-    circumference - (circumference * seriesPct);
+    CIRC - CIRC * seriesPct;
 
-  // Timer display
-  document.getElementById('timer-display').textContent = formatTime(APP.timerSeconds);
+  // Pulse ring on series circle
+  const seriesCircle = document.getElementById('series-circle');
+  seriesCircle.classList.remove('is-working', 'is-resting');
+  if (APP.timerState === 'work') seriesCircle.classList.add('is-working');
 
-  // State badge
-  const badge = document.getElementById('modal-state-badge');
-  if (APP.timerState === 'work') {
-    badge.className = 'state-badge work';
-    badge.innerHTML = '<div class="state-indicator"></div>TRABAJO';
-  } else if (APP.timerState === 'rest') {
-    badge.className = 'state-badge rest';
-    badge.innerHTML = '<div class="state-indicator"></div>DESCANSO';
-  } else if (APP.timerState === 'done') {
-    badge.className = 'state-badge done';
-    badge.innerHTML = '<div class="state-indicator"></div>COMPLETADO';
+  // ── Círculo izquierdo: timer ────────────────────────────
+  document.getElementById('timer-display').textContent =
+    formatTime(Math.max(0, APP.timerSeconds));
+
+  const timerFill   = document.getElementById('timer-fill');
+  const timerCircle = document.getElementById('timer-circle');
+  timerCircle.classList.remove('is-working', 'is-resting');
+
+  if ((APP.timerState === 'rest_running' || APP.timerState === 'rest_done') &&
+      REST_TOTAL_SECS > 0) {
+    const restPct = Math.max(0, APP.timerSeconds) / REST_TOTAL_SECS;
+    timerFill.style.strokeDashoffset = CIRC - CIRC * restPct;
+    timerFill.classList.remove('aqua');
+    timerFill.classList.add('orange');
+    timerCircle.classList.add('is-resting');
   } else {
-    badge.className = 'state-badge work';
-    badge.innerHTML = '<div class="state-indicator" style="animation:none;opacity:0.3"></div>LISTO';
+    timerFill.style.strokeDashoffset = 0;
+    timerFill.classList.remove('orange');
+    timerFill.classList.add('aqua');
+    if (APP.timerState === 'work') timerCircle.classList.add('is-working');
   }
 
-  // Button states
-  const btnStart = document.getElementById('modal-btn-start');
-  const btnCompleteSet = document.getElementById('modal-btn-complete-set');
-  const btnRest = document.getElementById('modal-btn-rest');
+  // ── Badge de estado ────────────────────────────────────
+  const badge = document.getElementById('modal-state-badge');
+  const STATES = {
+    idle:         { cls: 'work',  label: 'LISTO',    pulse: false },
+    work:         { cls: 'work',  label: 'TRABAJO',  pulse: true  },
+    rest_running: { cls: 'rest',  label: 'DESCANSO', pulse: true  },
+    rest_done:    { cls: 'rest',  label: '¡LISTO!',  pulse: false },
+    done:         { cls: 'done',  label: 'COMPLETADO', pulse: false }
+  };
+  const st = STATES[APP.timerState] || STATES.idle;
+  badge.className = `state-badge ${st.cls}`;
+  badge.innerHTML = `<div class="state-indicator"${st.pulse ? '' : ' style="animation:none;opacity:0.4"'}></div>${st.label}`;
 
-  if (APP.timerState === 'idle') {
-    btnStart.disabled = false;
-    btnStart.textContent = '▶ Iniciar serie';
-    btnCompleteSet.disabled = true;
-    btnRest.disabled = true;
-  } else if (APP.timerState === 'work') {
-    btnStart.textContent = APP.timerRunning ? '⏸ Pausar' : '▶ Continuar';
-    btnStart.disabled = false;
-    btnCompleteSet.disabled = false;
-    btnRest.disabled = true;
-  } else if (APP.timerState === 'rest') {
-    btnStart.textContent = APP.timerRunning ? '⏸ Pausar descanso' : '▶ Continuar';
-    btnStart.disabled = false;
-    btnCompleteSet.disabled = true;
-    btnRest.disabled = true;
-  } else if (APP.timerState === 'done') {
-    btnStart.disabled = true;
-    btnStart.textContent = '✓ Ejercicio listo';
-    btnCompleteSet.disabled = true;
-    btnRest.disabled = true;
+  // ── Botones ────────────────────────────────────────────
+  const btnStart       = document.getElementById('modal-btn-start');
+  const btnCompleteSet = document.getElementById('modal-btn-complete-set');
+  const btnRest        = document.getElementById('modal-btn-rest');
+
+  // Reset visual por defecto
+  btnStart.disabled       = false;
+  btnCompleteSet.disabled = true;
+  btnRest.disabled        = true;
+  btnRest.textContent     = '⏸ Iniciar descanso';
+
+  switch (APP.timerState) {
+
+    case 'idle':
+      btnStart.textContent     = '▶ Iniciar serie';
+      btnCompleteSet.disabled  = true;
+      btnRest.disabled         = true;
+      break;
+
+    case 'work':
+      btnStart.textContent     = APP.timerRunning ? '⏸ Pausar' : '▶ Continuar';
+      btnCompleteSet.disabled  = false;   // ← habilita "Completar serie"
+      btnRest.disabled         = true;
+      break;
+
+    case 'rest_running':
+      btnStart.textContent     = APP.timerRunning ? '⏸ Pausar descanso' : '▶ Continuar descanso';
+      btnCompleteSet.disabled  = true;
+      btnRest.disabled         = true;    // ← "Completar descanso" deshabilitado mientras corre
+      btnRest.textContent      = '⏳ Completar descanso';
+      break;
+
+    case 'rest_done':
+      btnStart.disabled        = true;    // ← no se puede "iniciar" durante rest_done
+      btnStart.textContent     = '⏸ Pausar descanso';
+      btnCompleteSet.disabled  = true;
+      btnRest.disabled         = false;   // ← ¡SE HABILITA! pulsa para cerrar descanso
+      btnRest.textContent      = '✓ Completar descanso';
+      break;
+
+    case 'done':
+      btnStart.disabled        = true;
+      btnStart.textContent     = '✓ Ejercicio listo';
+      btnCompleteSet.disabled  = true;
+      btnRest.disabled         = true;
+      break;
   }
 }
 
+// ── Iniciar / Pausar (solo afecta a work y rest_running) ──
 function startTimer() {
   if (APP.timerState === 'idle') {
-    APP.timerState = 'work';
+    // Primera pulsación: arranca el cronómetro de trabajo
+    APP.timerState   = 'work';
     APP.timerSeconds = 0;
-    APP.timerRunning = true;
-  } else {
-    APP.timerRunning = !APP.timerRunning;
-  }
+    _runWorkTimer();
 
-  if (APP.timerRunning) {
-    APP.timerInterval = setInterval(() => {
-      APP.timerSeconds++;
-      document.getElementById('timer-display').textContent = formatTime(APP.timerSeconds);
-      // Timer circle: just keep counting up (no max for open timer)
-    }, 1000);
-  } else {
-    clearInterval(APP.timerInterval);
+  } else if (APP.timerState === 'work') {
+    // Pausar / reanudar
+    if (APP.timerRunning) {
+      stopTimer();
+    } else {
+      _runWorkTimer();
+    }
+
+  } else if (APP.timerState === 'rest_running') {
+    // Pausar / reanudar el descanso
+    if (APP.timerRunning) {
+      stopTimer();
+    } else {
+      _runRestTimer();
+    }
   }
+  // En rest_done y done el botón está disabled → no se ejecuta
 
   updateTimerModal();
 }
 
-function resetTimer() {
-  clearInterval(APP.timerInterval);
-  APP.timerSeconds = 0;
-  APP.timerRunning = false;
-  document.getElementById('timer-display').textContent = '00:00';
-  document.getElementById('timer-fill').style.strokeDashoffset = '0';
+function _runWorkTimer() {
+  stopTimer();
+  APP.timerRunning = true;
+  APP.timerInterval = setInterval(() => {
+    APP.timerSeconds++;
+    document.getElementById('timer-display').textContent =
+      formatTime(APP.timerSeconds);
+  }, 1000);
 }
 
+function _runRestTimer() {
+  stopTimer();
+  APP.timerRunning = true;
+  APP.timerInterval = setInterval(() => {
+    if (APP.timerSeconds <= 0) {
+      // Descanso terminado → rest_done
+      stopTimer();
+      APP.timerSeconds = 0;
+      APP.timerState   = 'rest_done';
+      showToast('⏰ ¡Descanso completado! Pulsa "Completar descanso"', 'success');
+      updateTimerModal();
+      return;
+    }
+    APP.timerSeconds--;
+    document.getElementById('timer-display').textContent =
+      formatTime(Math.max(0, APP.timerSeconds));
+
+    // Actualiza arco del círculo izquierdo (r=66 → CIRC=415)
+    if (REST_TOTAL_SECS > 0) {
+      const CIRC = 415;
+      const restPct = APP.timerSeconds / REST_TOTAL_SECS;
+      document.getElementById('timer-fill').style.strokeDashoffset =
+        CIRC - CIRC * restPct;
+    }
+  }, 1000);
+}
+
+// ── Reiniciar cronómetro (solo timer de trabajo) ──────────
+function resetTimer() {
+  if (APP.timerState === 'rest_running' || APP.timerState === 'rest_done') return;
+  stopTimer();
+  APP.timerSeconds = 0;
+  APP.timerState   = 'idle';
+  document.getElementById('timer-display').textContent = '00:00';
+  document.getElementById('timer-fill').style.strokeDashoffset = '0';
+  updateTimerModal();
+}
+
+// ── Completar serie ───────────────────────────────────────
 function completeSet() {
-  clearInterval(APP.timerInterval);
-  APP.timerRunning = false;
+  if (APP.timerState !== 'work') return;
+
+  stopTimer();
   APP.currentSeriesCount++;
 
-  if (APP.currentSeriesCount >= APP.currentExercise.sets) {
-    APP.timerState = 'done';
-    markExerciseDone(APP.currentExercise.id);
-    showToast('✓ Ejercicio completado!', 'success');
-  } else {
-    APP.timerState = 'rest';
-    // Auto-start rest countdown
-    const restSecs = APP.currentExercise.rest || 60;
-    APP.timerSeconds = restSecs;
-    document.getElementById('timer-display').textContent = formatTime(APP.timerSeconds);
-    APP.timerRunning = true;
-    APP.timerInterval = setInterval(() => {
-      APP.timerSeconds--;
-      document.getElementById('timer-display').textContent = formatTime(Math.max(0, APP.timerSeconds));
-      if (APP.timerSeconds <= 0) {
-        clearInterval(APP.timerInterval);
-        APP.timerRunning = false;
-        APP.timerState = 'work';
-        APP.timerSeconds = 0;
-        showToast('¡Descanso terminado! Siguiente serie', 'success');
-        updateTimerModal();
-      }
-    }, 1000);
+  // Bump animation on series circle number
+  const seriesNum = document.getElementById('series-current');
+  if (seriesNum) {
+    seriesNum.classList.remove('series-bump');
+    void seriesNum.offsetWidth; // force reflow
+    seriesNum.classList.add('series-bump');
+    seriesNum.textContent = APP.currentSeriesCount;
   }
 
+  // Actualiza el arco de series inmediatamente
+  const CIRC = 415;
+  const seriesPct = APP.currentSeriesCount / APP.currentExercise.sets;
+  document.getElementById('series-fill').style.strokeDashoffset =
+    CIRC - CIRC * seriesPct;
+
+  if (APP.currentSeriesCount >= APP.currentExercise.sets) {
+    // ── Todas las series completadas ──
+    APP.timerState = 'done';
+    markExerciseDone(APP.currentExercise.id);
+    showToast('🎯 ¡Ejercicio completado!', 'success');
+    updateTimerModal();
+
+  } else {
+    // ── Quedan series: iniciar countdown de descanso ──
+    const restSecs = APP.currentExercise.rest || 60;
+    REST_TOTAL_SECS  = restSecs;
+    APP.timerSeconds = restSecs;
+    APP.timerState   = 'rest_running';
+
+    document.getElementById('timer-display').textContent = formatTime(restSecs);
+    document.getElementById('timer-fill').classList.remove('aqua');
+    document.getElementById('timer-fill').classList.add('orange');
+
+    showToast(`Serie ${APP.currentSeriesCount}/${APP.currentExercise.sets} ✓ — Descansando ${restSecs}s`);
+    updateTimerModal();
+    _runRestTimer();
+  }
+}
+
+// ── Completar descanso (solo en rest_done) ────────────────
+function completeRest() {
+  if (APP.timerState !== 'rest_done') return;
+
+  stopTimer();
+  // Resetea todo al estado idle listo para la siguiente serie
+  APP.timerSeconds = 0;
+  REST_TOTAL_SECS  = 0;
+  APP.timerState   = 'idle';
+
+  // Resetea visualmente el círculo izquierdo a aqua/lleno
+  const timerFill = document.getElementById('timer-fill');
+  timerFill.style.strokeDashoffset = '0';
+  timerFill.classList.remove('orange');
+  timerFill.classList.add('aqua');
+
+  document.getElementById('timer-display').textContent = '00:00';
+  showToast('▶ ¡A por la siguiente serie!', 'success');
   updateTimerModal();
 }
 
 function nextExercise() {
-  clearInterval(APP.timerInterval);
-  APP.timerRunning = false;
+  stopTimer();
   const nextIdx = APP.currentExerciseIndex + 1;
   if (nextIdx < APP.currentRoutineExercises.length) {
     openTimerModal(nextIdx);
@@ -1065,8 +1327,7 @@ function nextExercise() {
 }
 
 function closeTimerModal() {
-  clearInterval(APP.timerInterval);
-  APP.timerRunning = false;
+  stopTimer();
   document.getElementById('timer-modal').classList.add('hidden');
   renderToday();
 }
@@ -1075,93 +1336,157 @@ function closeTimerModal() {
 // 10. DASHBOARD
 // ═══════════════════════════════════════════════════════════
 
+// Animated counter: counts up from current displayed value to target
+function animateCounter(el, target, suffix = '', duration = 700) {
+  if (!el) return;
+  const start = parseInt(el.dataset.current || 0) || 0;
+  el.dataset.current = target;
+  if (start === target) return;
+  const startTime = performance.now();
+  const step = (now) => {
+    const p = Math.min(1, (now - startTime) / duration);
+    const ease = 1 - Math.pow(1 - p, 3); // ease-out cubic
+    const val = Math.round(start + (target - start) * ease);
+    el.textContent = val + suffix;
+    if (p < 1) requestAnimationFrame(step);
+    else el.textContent = target + suffix;
+  };
+  requestAnimationFrame(step);
+}
+
 function renderDashboard() {
   const todaySession = getTodaySession();
-  const streak = getStreak();
-  const weekStats = getWeekStats();
+  const streak       = getStreak();
+  const weekStats    = getWeekStats();
+  const routine      = getTodayRoutine();
+  const exercises    = getModifiedExercises(routine.exercises, APP.currentMode);
 
-  // Score circle
-  const score = todaySession ? todaySession.score : 0;
+  // ── Score ───────────────────────────────────────────────
+  const scoreData  = todaySession?.scoreData || { total: 0, completion: 0, volume: 0, time: 0, energy: 0, consistency: 0 };
+  const score      = todaySession ? (scoreData.total ?? todaySession.score ?? 0) : 0;
   const scoreLabel = todaySession ? getScoreLabel(score) : 'Sin sesión aún';
   const scoreColor = getScoreColor(score);
 
-  const circumference = 553; // 2π * 88
+  // Main circle — circumference = 2π × 92 ≈ 578
+  const circumference = 578;
   const offset = circumference - (circumference * score / 100);
   const fill = document.getElementById('main-score-fill');
   fill.className = `fill ${scoreColor}`;
+  setTimeout(() => { fill.style.strokeDashoffset = offset; }, 80);
 
-  // Animate after paint
-  setTimeout(() => { fill.style.strokeDashoffset = offset; }, 100);
+  // Animate number
+  const numEl = document.getElementById('main-score-num');
+  numEl.style.color = `var(--${scoreColor})`;
+  if (score > 0) animateCounter(numEl, score);
+  else numEl.textContent = '—';
 
-  document.getElementById('main-score-num').textContent = score > 0 ? score : '—';
-  document.getElementById('main-score-num').style.color = `var(--${scoreColor})`;
   document.getElementById('dash-score-status').textContent = scoreLabel;
+  document.getElementById('dash-score-status').style.color = `var(--${scoreColor})`;
 
-  // Phrase
-  document.getElementById('dash-phrase').textContent = getPhrase(score);
+  // Score section glow class
+  const section = document.getElementById('dash-score-section');
+  section.className = 'dash-score-section ' + (score >= 85 ? 'score-high' : score >= 70 ? 'score-good' : score >= 50 ? 'score-med' : score > 0 ? 'score-low' : '');
 
-  // Cards
-  const minutes = todaySession ? todaySession.minutesTracker : 0;
-  const targetMin = APP.settings.dailyMinTarget;
-  document.getElementById('dc-time').textContent = minutes;
+  // ── Breakdown components ────────────────────────────────
+  const setComp = (id, val, max) => {
+    const el = document.getElementById(id);
+    if (el) animateCounter(el, val);
+    // Animate the ::after bar via CSS custom prop on parent
+    const parent = el?.closest('.score-component');
+    if (parent) setTimeout(() => parent.style.setProperty('--bar', (val/max*100)+'%'), 100);
+  };
+  setComp('sc-completion', scoreData.completion || 0, 35);
+  setComp('sc-volume',     scoreData.volume || 0, 25);
+  setComp('sc-time',       scoreData.time || 0, 20);
+  setComp('sc-energy-comp',scoreData.energy || 0, 10);
+
+  // ── Phrase ──────────────────────────────────────────────
+  document.getElementById('dash-phrase').textContent =
+    getPhrase(score);
+
+  // ── Metric cards ────────────────────────────────────────
+  const minutes    = todaySession ? (todaySession.minutesTracker || 0) : 0;
+  const targetMin  = APP.settings.dailyMinTarget;
+  const timeEl     = document.getElementById('dc-time');
+  // Replace entire content (has dc-unit span inside)
+  timeEl.innerHTML = `<span id="dc-time-num">0</span><span class="dc-unit">min</span>`;
+  animateCounter(document.getElementById('dc-time-num'), minutes);
   document.getElementById('dc-time-sub').textContent = `de ${targetMin} min meta`;
-  document.getElementById('dc-time-bar').style.width = Math.min(100, (minutes / targetMin) * 100) + '%';
+  setTimeout(() => {
+    document.getElementById('dc-time-bar').style.width =
+      Math.min(100, (minutes / targetMin) * 100) + '%';
+  }, 120);
 
-  const series = todaySession ? todaySession.seriesCompleted : 0;
-  const targetSeries = APP.settings.dailySeriesTarget;
-  document.getElementById('dc-series').textContent = series;
-  document.getElementById('dc-series-sub').textContent = `completadas hoy`;
-  document.getElementById('dc-series-bar').style.width = Math.min(100, (series / targetSeries) * 100) + '%';
+  const plannedSets   = exercises.reduce((s, e) => s + e.sets, 0);
+  const series        = todaySession ? (todaySession.seriesCompleted || 0) : 0;
+  const seriesEl      = document.getElementById('dc-series');
+  animateCounter(seriesEl, series);
+  document.getElementById('dc-series-sub').textContent = `de ${plannedSets} planificadas`;
+  setTimeout(() => {
+    document.getElementById('dc-series-bar').style.width =
+      Math.min(100, plannedSets > 0 ? (series / plannedSets) * 100 : 0) + '%';
+  }, 160);
 
-  const exDone = todaySession ? todaySession.exercisesCompleted : 0;
-  const exTotal = todaySession ? todaySession.exercisesTotal : getTodayRoutine().exercises.length;
-  document.getElementById('dc-exercises').textContent = exDone;
+  const exDone   = todaySession ? (todaySession.exercisesCompleted || 0) : 0;
+  const exTotal  = exercises.length;
+  animateCounter(document.getElementById('dc-exercises'), exDone);
   document.getElementById('dc-exercises-sub').textContent = `de ${exTotal} planificados`;
-  document.getElementById('dc-exercises-bar').style.width = exTotal > 0 ? Math.min(100, (exDone / exTotal) * 100) + '%' : '0%';
+  setTimeout(() => {
+    document.getElementById('dc-exercises-bar').style.width =
+      exTotal > 0 ? Math.min(100, (exDone / exTotal) * 100) + '%' : '0%';
+  }, 200);
 
-  // Energy
-  const energy = todaySession ? todaySession.energy : 0;
-  document.getElementById('dc-energy').textContent = energy || '—';
+  // Energy bar segments
+  const energy = todaySession ? (todaySession.energy || 0) : 0;
+  const energyEl = document.getElementById('dc-energy');
+  energyEl.textContent = energy || '—';
+  energyEl.style.color = energy >= 4 ? 'var(--green)' : energy >= 3 ? 'var(--yellow)' : energy > 0 ? 'var(--orange)' : 'var(--text-muted)';
   document.getElementById('dc-energy-label').textContent = energy ? getEnergyLabel(energy) : 'Sin registrar';
-  document.querySelectorAll('.energy-dot').forEach((dot, i) => {
-    dot.classList.toggle('active', i < energy);
+  document.querySelectorAll('.energy-seg').forEach((seg, i) => {
+    seg.classList.toggle('active', i < energy);
   });
 
-  // Carga
-  const routine = getTodayRoutine();
+  // ── Carga del día (calculada del volumen real) ───────────
+  const load = calculateLoad(exercises, APP.currentMode);
   ['suave', 'moderada', 'alta'].forEach(c => {
     const el = document.getElementById('carga-' + c);
-    el.className = 'carga-pill ' + c + (routine.load === c ? ' active' : '');
+    if (el) el.className = 'carga-pill ' + c + (load === c ? ' active' : '');
   });
+  const cargaDetailEl = document.getElementById('carga-detail');
+  if (cargaDetailEl) cargaDetailEl.textContent = LOAD_DESC[load];
 
-  // Streak & week
-  document.getElementById('dc-streak').textContent = streak;
-  document.getElementById('dc-week-label').textContent = `Esta semana: ${weekStats.daysCompleted}/7`;
+  // ── Streak & week ────────────────────────────────────────
+  animateCounter(document.getElementById('dc-streak'), streak);
+  document.getElementById('dc-week-label').textContent =
+    `Esta semana: ${weekStats.daysCompleted}/7 días`;
 
-  // Week dots
   const weekDots = getWeekDots();
-  const weekDotsEl = document.getElementById('dc-week-dots');
-  weekDotsEl.innerHTML = weekDots.map(d =>
+  document.getElementById('dc-week-dots').innerHTML = weekDots.map(d =>
     `<div class="week-dot${d.done ? ' done' : ''}${d.isToday ? ' today' : ''}"></div>`
   ).join('');
 
-  // 7-day history
+  // ── 7-day history ────────────────────────────────────────
+  const SESSION_ICONS = { casa: '🏠', recovery: '☁️', aguas: '🌊' };
   const last7 = getLast7Days();
-  document.getElementById('dc-history').innerHTML = last7.map(day => `
-    <div class="history-day${day.session ? ' done' : ''}${day.isToday ? ' today' : ''}">
-      <div class="hd-day">${day.label}</div>
-      <div class="hd-score">${day.session ? day.session.score : '—'}</div>
-      <div class="hd-dot"></div>
-    </div>
-  `).join('');
+  document.getElementById('dc-history').innerHTML = last7.map(day => {
+    const s = day.session;
+    const scorePct = s ? s.score + '%' : '0%';
+    const scoreCol = s ? `var(--${getScoreColor(s.score)})` : 'var(--border)';
+    const icon = s ? (SESSION_ICONS[s.sessionType] || '🏠') : '';
+    return `
+      <div class="history-day${s ? ' done' : ''}${day.isToday ? ' today' : ''}"
+           style="--score-pct:${scorePct};--score-color:${scoreCol}">
+        <div class="hd-day">${day.label}</div>
+        <div class="hd-icon">${icon || '·'}</div>
+        <div class="hd-score">${s ? s.score : '—'}</div>
+      </div>`;
+  }).join('');
 
-  // Recommendations
+  // ── Recommendations ──────────────────────────────────────
   const recs = getRecommendations();
-  document.getElementById('dc-recs').innerHTML = recs.map(r => `
-    <div style="padding:8px 0;border-bottom:1px solid var(--border);font-family:var(--font-body);font-size:13px;color:var(--text-secondary);line-height:1.4">
-      → ${r}
-    </div>
-  `).join('');
+  document.getElementById('dc-recs').innerHTML = recs.map(r =>
+    `<div class="rec-item"><span class="rec-arrow">→</span>${r}</div>`
+  ).join('');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1309,6 +1634,8 @@ function saveSession() {
   const pain = document.getElementById('manual-pain').value || 'ninguna';
   const notes = document.getElementById('manual-notes').value || '';
   const routine = getTodayRoutine();
+  const exercises = APP.currentRoutineExercises.length
+    ? APP.currentRoutineExercises : routine.exercises;
 
   const session = {
     id: 'session_' + Date.now(),
@@ -1317,15 +1644,18 @@ function saveSession() {
     sessionType,
     energy,
     minutesTracker: minutes,
-    seriesCompleted: APP.completedExercises.size * 3, // estimate
+    seriesCompleted: APP.completedExercises.size * 3,
     exercisesCompleted: APP.completedExercises.size,
-    exercisesTotal: routine.exercises.length,
-    routineCompleted: minutes >= parseInt(routine.duration) || APP.completedExercises.size >= routine.exercises.length * 0.8,
+    exercisesTotal: exercises.length,
+    routineCompleted: minutes >= parseInt(routine.duration) || APP.completedExercises.size >= exercises.length * 0.8,
     pain,
     notes,
+    scoreData: null,
     score: 0
   };
-  session.score = calculateScore(session);
+  const scoreData = calculateScore(session);
+  session.scoreData = scoreData;
+  session.score = scoreData.total;
 
   APP.sessions = APP.sessions.filter(s => s.date !== getTodayKey());
   APP.sessions.push(session);
@@ -1380,25 +1710,9 @@ function bindEvents() {
   document.getElementById('modal-btn-start').addEventListener('click', startTimer);
   document.getElementById('modal-btn-reset').addEventListener('click', resetTimer);
   document.getElementById('modal-btn-complete-set').addEventListener('click', completeSet);
+  // Botón de descanso: en rest_done actúa como "Completar descanso"
   document.getElementById('modal-btn-rest').addEventListener('click', () => {
-    // Manual rest
-    APP.timerState = 'rest';
-    APP.timerSeconds = APP.currentExercise.rest || 60;
-    APP.timerRunning = true;
-    clearInterval(APP.timerInterval);
-    APP.timerInterval = setInterval(() => {
-      APP.timerSeconds--;
-      document.getElementById('timer-display').textContent = formatTime(Math.max(0, APP.timerSeconds));
-      if (APP.timerSeconds <= 0) {
-        clearInterval(APP.timerInterval);
-        APP.timerRunning = false;
-        APP.timerState = 'work';
-        APP.timerSeconds = 0;
-        updateTimerModal();
-        showToast('¡Vuelve al trabajo!', 'success');
-      }
-    }, 1000);
-    updateTimerModal();
+    completeRest();
   });
   document.getElementById('modal-btn-next-ex').addEventListener('click', nextExercise);
   document.getElementById('modal-btn-close').addEventListener('click', closeTimerModal);

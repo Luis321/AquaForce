@@ -158,107 +158,128 @@
     <div class="page-inner">
 
       <!-- Main Score -->
-      <div class="dash-score-section">
+      <div class="dash-score-section" id="dash-score-section">
         <div class="score-circle lg" id="main-score-circle">
-          <svg viewBox="0 0 200 200">
-            <circle class="track" cx="100" cy="100" r="88" stroke-width="10"/>
-            <circle class="fill aqua" id="main-score-fill" cx="100" cy="100" r="88" stroke-width="10"
-              stroke-dasharray="553" stroke-dashoffset="553"/>
+          <svg viewBox="0 0 210 210">
+            <circle class="track" cx="105" cy="105" r="92" stroke-width="12"/>
+            <circle class="track-ticks" cx="105" cy="105" r="92" stroke-width="12"/>
+            <circle class="fill aqua" id="main-score-fill" cx="105" cy="105" r="92" stroke-width="12"
+              stroke-dasharray="578" stroke-dashoffset="578"/>
           </svg>
           <div class="inner">
-            <div class="num aqua glow-aqua" id="main-score-num">—</div>
-            <div class="lbl" style="color:var(--text-muted)">SCORE</div>
+            <div class="num aqua" id="main-score-num">—</div>
+            <div class="lbl">SCORE</div>
           </div>
         </div>
         <div class="dash-score-label">SCORE DEL DÍA</div>
         <div class="dash-score-status" id="dash-score-status">Sin sesión aún</div>
+
+        <!-- Score breakdown: 4 components -->
+        <div class="score-breakdown" id="score-breakdown">
+          <div class="score-component c-completion">
+            <div class="sc-val" id="sc-completion">—</div>
+            <div class="sc-lbl">Compl.</div>
+          </div>
+          <div class="score-component c-volume">
+            <div class="sc-val" id="sc-volume">—</div>
+            <div class="sc-lbl">Volumen</div>
+          </div>
+          <div class="score-component c-time">
+            <div class="sc-val" id="sc-time">—</div>
+            <div class="sc-lbl">Tiempo</div>
+          </div>
+          <div class="score-component c-energy">
+            <div class="sc-val" id="sc-energy-comp">—</div>
+            <div class="sc-lbl">Energía</div>
+          </div>
+        </div>
       </div>
 
       <!-- Phrase -->
       <div class="dash-phrase" id="dash-phrase">
-        "La constancia construye más que la intensidad. Muéstrate hoy."
+        La constancia construye más que la intensidad. Muéstrate hoy.
       </div>
 
-      <!-- Cards grid -->
+      <!-- Stats grid -->
+      <div class="dash-section-title">Métricas del día</div>
       <div class="dash-grid">
 
-        <div class="dash-card">
+        <div class="dash-card accent-aqua">
           <div class="dc-label">Tiempo entrenado</div>
-          <div class="dc-value aqua" id="dc-time">0</div>
+          <div class="dc-value aqua" id="dc-time">0<span class="dc-unit">min</span></div>
           <div class="dc-sub" id="dc-time-sub">de 25 min meta</div>
           <div class="dc-bar-wrap"><div class="dc-bar" id="dc-time-bar" style="width:0%"></div></div>
         </div>
 
-        <div class="dash-card">
-          <div class="dc-label">Series</div>
+        <div class="dash-card accent-orange">
+          <div class="dc-label">Series realizadas</div>
           <div class="dc-value orange" id="dc-series">0</div>
-          <div class="dc-sub" id="dc-series-sub">completadas hoy</div>
+          <div class="dc-sub" id="dc-series-sub">de 0 planificadas</div>
           <div class="dc-bar-wrap"><div class="dc-bar orange" id="dc-series-bar" style="width:0%"></div></div>
         </div>
 
-        <div class="dash-card">
+        <div class="dash-card accent-green">
           <div class="dc-label">Ejercicios</div>
           <div class="dc-value green" id="dc-exercises">0</div>
           <div class="dc-sub" id="dc-exercises-sub">de 0 planificados</div>
           <div class="dc-bar-wrap"><div class="dc-bar green" id="dc-exercises-bar" style="width:0%"></div></div>
         </div>
 
-        <div class="dash-card">
+        <div class="dash-card accent-yellow">
           <div class="dc-label">Energía</div>
-          <div class="dc-value orange" id="dc-energy">—</div>
+          <div class="dc-value" id="dc-energy" style="color:var(--yellow)">—</div>
           <div class="dc-sub" id="dc-energy-label">Sin registrar</div>
-          <div class="energy-dots" id="dc-energy-dots">
-            <div class="energy-dot"></div>
-            <div class="energy-dot"></div>
-            <div class="energy-dot"></div>
-            <div class="energy-dot"></div>
-            <div class="energy-dot"></div>
+          <div class="energy-bar-row" id="dc-energy-bar">
+            <div class="energy-seg e1"></div>
+            <div class="energy-seg e2"></div>
+            <div class="energy-seg e3"></div>
+            <div class="energy-seg e4"></div>
+            <div class="energy-seg e5"></div>
           </div>
         </div>
 
+        <!-- Carga full-width -->
         <div class="dash-card full">
           <div class="dc-label">Carga del día</div>
           <div class="carga-row">
-            <div class="carga-pill suave"    id="carga-suave">Suave</div>
-            <div class="carga-pill moderada" id="carga-moderada">Moderada</div>
-            <div class="carga-pill alta"     id="carga-alta">Alta</div>
+            <div class="carga-pill suave"    id="carga-suave">⬤ Suave</div>
+            <div class="carga-pill moderada" id="carga-moderada">⬤ Moderada</div>
+            <div class="carga-pill alta"     id="carga-alta">⬤ Alta</div>
+          </div>
+          <div style="margin-top:8px;font-family:var(--font-body);font-size:11px;color:var(--text-muted)" id="carga-detail">
+            Basada en series planificadas y duración de la rutina
           </div>
         </div>
 
+        <!-- Streak & week -->
         <div class="dash-card full">
-          <div class="dc-label" style="margin-bottom:10px">Racha & semana</div>
-          <div style="display:flex;align-items:center;gap:20px">
-            <div>
+          <div class="dc-label" style="margin-bottom:12px">Racha & semana</div>
+          <div style="display:flex;align-items:center;gap:24px">
+            <div style="text-align:center">
               <div class="dc-value orange" id="dc-streak">0</div>
-              <div class="dc-sub">Días de racha 🔥</div>
+              <div style="font-family:var(--font-ui);font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:4px">Racha 🔥</div>
             </div>
             <div style="flex:1">
-              <div class="dc-sub" style="margin-bottom:6px" id="dc-week-label">Esta semana: 0/7</div>
-              <div class="week-dots" id="dc-week-dots">
-                <div class="week-dot"></div>
-                <div class="week-dot"></div>
-                <div class="week-dot"></div>
-                <div class="week-dot"></div>
-                <div class="week-dot"></div>
-                <div class="week-dot today"></div>
-                <div class="week-dot"></div>
-              </div>
+              <div style="font-family:var(--font-body);font-size:12px;color:var(--text-secondary);margin-bottom:8px" id="dc-week-label">Esta semana: 0/7</div>
+              <div class="week-dots" id="dc-week-dots"></div>
             </div>
           </div>
-        </div>
-
-        <div class="dash-card full">
-          <div class="dc-label" style="margin-bottom:10px">Últimos 7 días</div>
-          <div class="history-grid" id="dc-history"></div>
-        </div>
-
-        <!-- Recommendations -->
-        <div class="dash-card full" id="dc-recs-card">
-          <div class="dc-label" style="margin-bottom:10px">💡 Recomendaciones</div>
-          <div id="dc-recs"></div>
         </div>
 
       </div>
+
+      <!-- 7-day history -->
+      <div class="dash-section-title">Últimos 7 días</div>
+      <div class="dash-card full" style="margin-bottom:16px">
+        <div class="history-grid" id="dc-history"></div>
+      </div>
+
+      <!-- Recommendations -->
+      <div class="dash-section-title">Recomendaciones</div>
+      <div class="dash-card full" id="dc-recs-card">
+        <div id="dc-recs"></div>
+      </div>
+
     </div>
   </div>
 
@@ -486,12 +507,13 @@
           <div class="circle-unit-label">TIEMPO SERIE</div>
           <div class="score-circle" id="timer-circle">
             <svg viewBox="0 0 160 160">
-              <circle class="track" cx="80" cy="80" r="68" stroke-width="8"/>
-              <circle class="fill aqua" id="timer-fill" cx="80" cy="80" r="68" stroke-width="8"
-                stroke-dasharray="427" stroke-dashoffset="0"/>
+              <circle class="track" cx="80" cy="80" r="66" stroke-width="11"/>
+              <circle class="track-ticks" cx="80" cy="80" r="66" stroke-width="11"/>
+              <circle class="fill aqua" id="timer-fill" cx="80" cy="80" r="66" stroke-width="11"
+                stroke-dasharray="415" stroke-dashoffset="0"/>
             </svg>
             <div class="inner">
-              <div class="num aqua" id="timer-display" style="font-size:32px;letter-spacing:-1px">00:00</div>
+              <div class="num aqua" id="timer-display" style="font-size:30px;letter-spacing:-1px">00:00</div>
             </div>
           </div>
         </div>
@@ -501,14 +523,15 @@
           <div class="circle-unit-label">SERIES</div>
           <div class="score-circle" id="series-circle">
             <svg viewBox="0 0 160 160">
-              <circle class="track" cx="80" cy="80" r="68" stroke-width="8"/>
-              <circle class="fill orange" id="series-fill" cx="80" cy="80" r="68" stroke-width="8"
-                stroke-dasharray="427" stroke-dashoffset="427"/>
+              <circle class="track" cx="80" cy="80" r="66" stroke-width="11"/>
+              <circle class="track-ticks" cx="80" cy="80" r="66" stroke-width="11"/>
+              <circle class="fill orange" id="series-fill" cx="80" cy="80" r="66" stroke-width="11"
+                stroke-dasharray="415" stroke-dashoffset="415"/>
             </svg>
             <div class="inner">
-              <div class="num" style="font-size:32px;letter-spacing:-1px">
+              <div class="num" style="font-size:28px;letter-spacing:-1px">
                 <span id="series-current" style="color:var(--orange)">0</span>
-                <span style="color:var(--text-muted);font-size:20px">/</span>
+                <span style="color:var(--text-muted);font-size:18px">/</span>
                 <span id="series-total" style="color:var(--text-muted)">3</span>
               </div>
             </div>
