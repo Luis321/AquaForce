@@ -1801,8 +1801,18 @@ ul, ol { list-style: none; }
   text-transform: uppercase;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 4px; }
+/* Number value pop-in animation (used by setVal) */
+@keyframes valPop {
+  0%   { opacity: 0.4; transform: scale(1.14); }
+  100% { opacity: 1;   transform: scale(1); }
+}
+
+/* History partial state */
+.history-day.partial {
+  border-color: rgba(255,214,10,0.3);
+  background: linear-gradient(180deg, rgba(255,214,10,0.04) 0%, var(--bg-surface) 100%);
+}
+.history-day.partial .hd-score { color: var(--yellow); }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: var(--r-full); }
 

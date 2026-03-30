@@ -206,7 +206,7 @@
 
         <div class="dash-card accent-aqua">
           <div class="dc-label">Tiempo entrenado</div>
-          <div class="dc-value aqua" id="dc-time">0<span class="dc-unit">min</span></div>
+          <div class="dc-value aqua" id="dc-time"><span id="dc-time-num">0</span><span class="dc-unit">min</span></div>
           <div class="dc-sub" id="dc-time-sub">de 25 min meta</div>
           <div class="dc-bar-wrap"><div class="dc-bar" id="dc-time-bar" style="width:0%"></div></div>
         </div>
@@ -249,6 +249,24 @@
           <div style="margin-top:8px;font-family:var(--font-body);font-size:11px;color:var(--text-muted)" id="carga-detail">
             Basada en series planificadas y duración de la rutina
           </div>
+        </div>
+
+      </div>
+
+      <!-- Sección semanal acumulada -->
+      <div class="dash-section-title">Score semanal acumulado</div>
+      <div class="dash-grid" style="margin-bottom:16px">
+
+        <div class="dash-card accent-aqua">
+          <div class="dc-label">Promedio semanal</div>
+          <div class="dc-value aqua" id="dc-week-score">—</div>
+          <div class="dc-sub">Score / día entrenado</div>
+        </div>
+
+        <div class="dash-card accent-green">
+          <div class="dc-label">Mejor score</div>
+          <div class="dc-value green" id="dc-week-best">—</div>
+          <div class="dc-sub">Esta semana</div>
         </div>
 
         <!-- Streak & week -->

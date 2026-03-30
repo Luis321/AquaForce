@@ -410,7 +410,28 @@ function saveToStorage() {
 function loadFromStorage() {
   try {
     const sessions = localStorage.getItem('af_sessions');
-    if (sessions) APP.sessions = JSON.parse(sessions);
+    if (sessions) {
+      const parsed = JSON.parse(sessions);
+      // Normalizar sesiones antiguas (v1.0/v1.1) que tienen score como número, no objeto
+      APP.sessions = parsed.map(s => {
+        if (!s.scoreData && typeof s.score === 'number') {
+          // Reconstruir scoreData aproximado a partir del score total
+          s.scoreData = {
+            total: s.score,
+            completion: Math.round(s.score * 0.4),
+            volume:     Math.round(s.score * 0.25),
+            time:       Math.round(s.score * 0.2),
+            energy:     Math.round(s.score * 0.1),
+            consistency: Math.round(s.score * 0.05)
+          };
+        }
+        // Asegurar que score sea número
+        if (s.scoreData && typeof s.score !== 'number') {
+          s.score = s.scoreData.total || 0;
+        }
+        return s;
+      });
+    }
 
     const settings = localStorage.getItem('af_settings');
     if (settings) APP.settings = { ...APP.settings, ...JSON.parse(settings) };
@@ -426,7 +447,16 @@ function loadFromStorage() {
 }
 
 function getTodayKey() {
-  return new Date().toISOString().split('T')[0];
+  // IMPORTANTE: usar fecha LOCAL, no UTC (toISOString usa UTC y puede desfasar un día)
+  return localDateKey(new Date());
+}
+
+// Helper: fecha local en formato YYYY-MM-DD
+function localDateKey(d) {
+  const y  = d.getFullYear();
+  const m  = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
 }
 
 function loadDemoData() {
@@ -448,7 +478,7 @@ function loadDemoData() {
 
     const s = {
       id: `demo_${i}`,
-      date: d.toISOString().split('T')[0],
+      date: localDateKey(d),
       routineName: routine.name,
       sessionType: sessionTypes[i] || 'casa',
       energy,
@@ -621,7 +651,7 @@ function getStreak() {
   for (let i = 0; i < 30; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
-    const key = d.toISOString().split('T')[0];
+    const key = localDateKey(d);
     const session = APP.sessions.find(s => s.date === key);
     if (session && session.routineCompleted) streak++;
     else if (i > 0) break;
@@ -638,7 +668,7 @@ function getWeekStats() {
   for (let i = 0; i < 7; i++) {
     const d = new Date(weekStart);
     d.setDate(weekStart.getDate() + i);
-    const key = d.toISOString().split('T')[0];
+    const key = localDateKey(d);
     const session = APP.sessions.find(s => s.date === key);
     if (session) {
       if (session.routineCompleted) daysCompleted++;
@@ -659,7 +689,7 @@ function getLast7Days() {
   for (let i = 6; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
-    const key = d.toISOString().split('T')[0];
+    const key = localDateKey(d);
     const session = APP.sessions.find(s => s.date === key);
     days.push({
       label: dayShort[d.getDay()],
@@ -677,7 +707,7 @@ function getWeekDots() {
   for (let i = 0; i < 7; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() - todayDow + i);
-    const key = d.toISOString().split('T')[0];
+    const key = localDateKey(d);
     const session = APP.sessions.find(s => s.date === key);
     dots.push({
       isToday: i === todayDow,
@@ -1336,157 +1366,243 @@ function closeTimerModal() {
 // 10. DASHBOARD
 // ═══════════════════════════════════════════════════════════
 
-// Animated counter: counts up from current displayed value to target
-function animateCounter(el, target, suffix = '', duration = 700) {
+// Set a value with a short CSS pop animation on the element
+function setVal(id, text) {
+  const el = document.getElementById(id);
   if (!el) return;
-  const start = parseInt(el.dataset.current || 0) || 0;
-  el.dataset.current = target;
-  if (start === target) return;
-  const startTime = performance.now();
-  const step = (now) => {
-    const p = Math.min(1, (now - startTime) / duration);
-    const ease = 1 - Math.pow(1 - p, 3); // ease-out cubic
-    const val = Math.round(start + (target - start) * ease);
-    el.textContent = val + suffix;
-    if (p < 1) requestAnimationFrame(step);
-    else el.textContent = target + suffix;
+  if (el.textContent === String(text)) return; // no-op if same
+  el.textContent = text;
+  el.style.transition = 'none';
+  el.style.transform  = 'scale(1.15)';
+  el.style.opacity    = '0.5';
+  requestAnimationFrame(() => {
+    el.style.transition = 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease';
+    el.style.transform  = 'scale(1)';
+    el.style.opacity    = '1';
+  });
+}
+
+function setBar(id, pct) {
+  const el = document.getElementById(id);
+  if (el) el.style.width = Math.min(100, Math.max(0, pct)) + '%';
+}
+
+// Weekly cumulative stats
+function getWeeklyScore() {
+  const today = new Date();
+  const todayDow = today.getDay();
+  let total = 0, count = 0, best = 0;
+
+  for (let i = 0; i <= todayDow; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - todayDow + i);
+    const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
+    const key = `${y}-${m}-${dd}`;
+    const session = APP.sessions.find(s => s.date === key);
+    if (session && session.score > 0) {
+      total += session.score;
+      count++;
+      if (session.score > best) best = session.score;
+    }
+  }
+  return {
+    avg:   count > 0 ? Math.round(total / count) : 0,
+    total: Math.round(total),
+    best,
+    count
   };
-  requestAnimationFrame(step);
 }
 
 function renderDashboard() {
-  const todaySession = getTodaySession();
-  const streak       = getStreak();
-  const weekStats    = getWeekStats();
-  const routine      = getTodayRoutine();
-  const exercises    = getModifiedExercises(routine.exercises, APP.currentMode);
+  try {
+    const todaySession = getTodaySession();
+    const streak       = getStreak();
+    const weekStats    = getWeekStats();
+    const weekScore    = getWeeklyScore();
+    const routine      = getTodayRoutine();
+    const exercises    = getModifiedExercises(routine.exercises || [], APP.currentMode);
 
-  // ── Score ───────────────────────────────────────────────
-  const scoreData  = todaySession?.scoreData || { total: 0, completion: 0, volume: 0, time: 0, energy: 0, consistency: 0 };
-  const score      = todaySession ? (scoreData.total ?? todaySession.score ?? 0) : 0;
-  const scoreLabel = todaySession ? getScoreLabel(score) : 'Sin sesión aún';
-  const scoreColor = getScoreColor(score);
+    // ── Score hoy ───────────────────────────────────────────
+    // Compatibilidad: score puede ser número directo o estar en scoreData.total
+    const rawScore  = todaySession
+      ? (todaySession.scoreData?.total ?? todaySession.score ?? 0)
+      : 0;
+    const score      = Math.min(100, Math.max(0, Math.round(rawScore)));
+    const scoreLabel = todaySession ? getScoreLabel(score) : 'Sin sesión aún';
+    const scoreColor = getScoreColor(score);
 
-  // Main circle — circumference = 2π × 92 ≈ 578
-  const circumference = 578;
-  const offset = circumference - (circumference * score / 100);
-  const fill = document.getElementById('main-score-fill');
-  fill.className = `fill ${scoreColor}`;
-  setTimeout(() => { fill.style.strokeDashoffset = offset; }, 80);
+    // ── Círculo principal ────────────────────────────────────
+    const CIRC_MAIN = 578; // 2π × 92
+    const offset    = CIRC_MAIN - (CIRC_MAIN * score / 100);
+    const fill = document.getElementById('main-score-fill');
+    if (fill) {
+      fill.className = `fill ${scoreColor}`;
+      // Forzar reflow para que la transición se dispare desde 578
+      fill.style.transition = 'none';
+      fill.style.strokeDashoffset = CIRC_MAIN;
+      requestAnimationFrame(() => {
+        fill.style.transition = 'stroke-dashoffset 1.4s cubic-bezier(0.22, 0.61, 0.36, 1)';
+        fill.style.strokeDashoffset = offset;
+      });
+    }
 
-  // Animate number
-  const numEl = document.getElementById('main-score-num');
-  numEl.style.color = `var(--${scoreColor})`;
-  if (score > 0) animateCounter(numEl, score);
-  else numEl.textContent = '—';
+    // Número del score
+    const numEl = document.getElementById('main-score-num');
+    if (numEl) {
+      numEl.textContent  = score > 0 ? score : '—';
+      numEl.style.color  = `var(--${scoreColor})`;
+    }
 
-  document.getElementById('dash-score-status').textContent = scoreLabel;
-  document.getElementById('dash-score-status').style.color = `var(--${scoreColor})`;
+    const statusEl = document.getElementById('dash-score-status');
+    if (statusEl) {
+      statusEl.textContent = scoreLabel;
+      statusEl.style.color = score > 0 ? `var(--${scoreColor})` : 'var(--aqua)';
+    }
 
-  // Score section glow class
-  const section = document.getElementById('dash-score-section');
-  section.className = 'dash-score-section ' + (score >= 85 ? 'score-high' : score >= 70 ? 'score-good' : score >= 50 ? 'score-med' : score > 0 ? 'score-low' : '');
+    // Glow class en la sección
+    const section = document.getElementById('dash-score-section');
+    if (section) {
+      section.className = 'dash-score-section'
+        + (score >= 85 ? ' score-high'
+         : score >= 70 ? ' score-good'
+         : score >= 50 ? ' score-med'
+         : score  >  0 ? ' score-low' : '');
+    }
 
-  // ── Breakdown components ────────────────────────────────
-  const setComp = (id, val, max) => {
-    const el = document.getElementById(id);
-    if (el) animateCounter(el, val);
-    // Animate the ::after bar via CSS custom prop on parent
-    const parent = el?.closest('.score-component');
-    if (parent) setTimeout(() => parent.style.setProperty('--bar', (val/max*100)+'%'), 100);
-  };
-  setComp('sc-completion', scoreData.completion || 0, 35);
-  setComp('sc-volume',     scoreData.volume || 0, 25);
-  setComp('sc-time',       scoreData.time || 0, 20);
-  setComp('sc-energy-comp',scoreData.energy || 0, 10);
+    // ── Breakdown de componentes ─────────────────────────────
+    const sd = todaySession?.scoreData || {};
+    const compCompletion = Math.min(35, sd.completion || 0);
+    const compVolume     = Math.min(25, sd.volume     || 0);
+    const compTime       = Math.min(20, sd.time       || 0);
+    const compEnergy     = Math.min(10, sd.energy     || 0);
 
-  // ── Phrase ──────────────────────────────────────────────
-  document.getElementById('dash-phrase').textContent =
-    getPhrase(score);
+    const compMap = {
+      'sc-completion': { val: compCompletion, max: 35 },
+      'sc-volume':     { val: compVolume,     max: 25 },
+      'sc-time':       { val: compTime,       max: 20 },
+      'sc-energy-comp':{ val: compEnergy,     max: 10 }
+    };
+    Object.entries(compMap).forEach(([id, {val, max}]) => {
+      setVal(id, val);
+      const el = document.getElementById(id);
+      const parent = el?.closest('.score-component');
+      if (parent) {
+        setTimeout(() => parent.style.setProperty('--bar', (val / max * 100) + '%'), 120);
+      }
+    });
 
-  // ── Metric cards ────────────────────────────────────────
-  const minutes    = todaySession ? (todaySession.minutesTracker || 0) : 0;
-  const targetMin  = APP.settings.dailyMinTarget;
-  const timeEl     = document.getElementById('dc-time');
-  // Replace entire content (has dc-unit span inside)
-  timeEl.innerHTML = `<span id="dc-time-num">0</span><span class="dc-unit">min</span>`;
-  animateCounter(document.getElementById('dc-time-num'), minutes);
-  document.getElementById('dc-time-sub').textContent = `de ${targetMin} min meta`;
-  setTimeout(() => {
-    document.getElementById('dc-time-bar').style.width =
-      Math.min(100, (minutes / targetMin) * 100) + '%';
-  }, 120);
+    // ── Score semanal acumulado ──────────────────────────────
+    const weekScoreEl = document.getElementById('dc-week-score');
+    if (weekScoreEl) setVal('dc-week-score', weekScore.avg || '—');
+    const weekBestEl = document.getElementById('dc-week-best');
+    if (weekBestEl) setVal('dc-week-best', weekScore.best || '—');
 
-  const plannedSets   = exercises.reduce((s, e) => s + e.sets, 0);
-  const series        = todaySession ? (todaySession.seriesCompleted || 0) : 0;
-  const seriesEl      = document.getElementById('dc-series');
-  animateCounter(seriesEl, series);
-  document.getElementById('dc-series-sub').textContent = `de ${plannedSets} planificadas`;
-  setTimeout(() => {
-    document.getElementById('dc-series-bar').style.width =
-      Math.min(100, plannedSets > 0 ? (series / plannedSets) * 100 : 0) + '%';
-  }, 160);
+    // ── Frase motivacional ───────────────────────────────────
+    const phraseEl = document.getElementById('dash-phrase');
+    if (phraseEl) phraseEl.textContent = getPhrase(score);
 
-  const exDone   = todaySession ? (todaySession.exercisesCompleted || 0) : 0;
-  const exTotal  = exercises.length;
-  animateCounter(document.getElementById('dc-exercises'), exDone);
-  document.getElementById('dc-exercises-sub').textContent = `de ${exTotal} planificados`;
-  setTimeout(() => {
-    document.getElementById('dc-exercises-bar').style.width =
-      exTotal > 0 ? Math.min(100, (exDone / exTotal) * 100) + '%' : '0%';
-  }, 200);
+    // ── Métricas del día ────────────────────────────────────
+    const minutes   = todaySession ? (todaySession.minutesTracker || 0) : 0;
+    const targetMin = APP.settings.dailyMinTarget || 25;
 
-  // Energy bar segments
-  const energy = todaySession ? (todaySession.energy || 0) : 0;
-  const energyEl = document.getElementById('dc-energy');
-  energyEl.textContent = energy || '—';
-  energyEl.style.color = energy >= 4 ? 'var(--green)' : energy >= 3 ? 'var(--yellow)' : energy > 0 ? 'var(--orange)' : 'var(--text-muted)';
-  document.getElementById('dc-energy-label').textContent = energy ? getEnergyLabel(energy) : 'Sin registrar';
-  document.querySelectorAll('.energy-seg').forEach((seg, i) => {
-    seg.classList.toggle('active', i < energy);
-  });
+    // dc-time: actualizamos SOLO el span interno si existe, si no lo creamos una vez
+    let timeNumEl = document.getElementById('dc-time-num');
+    if (!timeNumEl) {
+      const timeEl = document.getElementById('dc-time');
+      if (timeEl) {
+        timeEl.innerHTML = '<span id="dc-time-num">0</span><span class="dc-unit">min</span>';
+        timeNumEl = document.getElementById('dc-time-num');
+      }
+    }
+    if (timeNumEl) setVal('dc-time-num', minutes);
+    const timeSubEl = document.getElementById('dc-time-sub');
+    if (timeSubEl) timeSubEl.textContent = `de ${targetMin} min meta`;
+    setTimeout(() => setBar('dc-time-bar', (minutes / targetMin) * 100), 120);
 
-  // ── Carga del día (calculada del volumen real) ───────────
-  const load = calculateLoad(exercises, APP.currentMode);
-  ['suave', 'moderada', 'alta'].forEach(c => {
-    const el = document.getElementById('carga-' + c);
-    if (el) el.className = 'carga-pill ' + c + (load === c ? ' active' : '');
-  });
-  const cargaDetailEl = document.getElementById('carga-detail');
-  if (cargaDetailEl) cargaDetailEl.textContent = LOAD_DESC[load];
+    const plannedSets = exercises.reduce((s, e) => s + (e.sets || 0), 0);
+    const series      = todaySession ? (todaySession.seriesCompleted || 0) : 0;
+    setVal('dc-series', series);
+    const seriesSubEl = document.getElementById('dc-series-sub');
+    if (seriesSubEl) seriesSubEl.textContent = `de ${plannedSets} planificadas`;
+    setTimeout(() => setBar('dc-series-bar', plannedSets > 0 ? (series / plannedSets) * 100 : 0), 160);
 
-  // ── Streak & week ────────────────────────────────────────
-  animateCounter(document.getElementById('dc-streak'), streak);
-  document.getElementById('dc-week-label').textContent =
-    `Esta semana: ${weekStats.daysCompleted}/7 días`;
+    const exDone  = todaySession ? (todaySession.exercisesCompleted || 0) : 0;
+    const exTotal = exercises.length;
+    setVal('dc-exercises', exDone);
+    const exSubEl = document.getElementById('dc-exercises-sub');
+    if (exSubEl) exSubEl.textContent = `de ${exTotal} planificados`;
+    setTimeout(() => setBar('dc-exercises-bar', exTotal > 0 ? (exDone / exTotal) * 100 : 0), 200);
 
-  const weekDots = getWeekDots();
-  document.getElementById('dc-week-dots').innerHTML = weekDots.map(d =>
-    `<div class="week-dot${d.done ? ' done' : ''}${d.isToday ? ' today' : ''}"></div>`
-  ).join('');
+    // Energy
+    const energy   = todaySession ? (todaySession.energy || 0) : 0;
+    const energyEl = document.getElementById('dc-energy');
+    if (energyEl) {
+      energyEl.textContent = energy || '—';
+      energyEl.style.color = energy >= 4 ? 'var(--green)'
+        : energy >= 3 ? 'var(--yellow)'
+        : energy  >  0 ? 'var(--orange)'
+        : 'var(--text-muted)';
+    }
+    const energyLabelEl = document.getElementById('dc-energy-label');
+    if (energyLabelEl) energyLabelEl.textContent = energy ? getEnergyLabel(energy) : 'Sin registrar';
+    document.querySelectorAll('.energy-seg').forEach((seg, i) => {
+      seg.classList.toggle('active', i < energy);
+    });
 
-  // ── 7-day history ────────────────────────────────────────
-  const SESSION_ICONS = { casa: '🏠', recovery: '☁️', aguas: '🌊' };
-  const last7 = getLast7Days();
-  document.getElementById('dc-history').innerHTML = last7.map(day => {
-    const s = day.session;
-    const scorePct = s ? s.score + '%' : '0%';
-    const scoreCol = s ? `var(--${getScoreColor(s.score)})` : 'var(--border)';
-    const icon = s ? (SESSION_ICONS[s.sessionType] || '🏠') : '';
-    return `
-      <div class="history-day${s ? ' done' : ''}${day.isToday ? ' today' : ''}"
-           style="--score-pct:${scorePct};--score-color:${scoreCol}">
-        <div class="hd-day">${day.label}</div>
-        <div class="hd-icon">${icon || '·'}</div>
-        <div class="hd-score">${s ? s.score : '—'}</div>
-      </div>`;
-  }).join('');
+    // ── Carga del día ────────────────────────────────────────
+    const load = calculateLoad(exercises, APP.currentMode);
+    ['suave', 'moderada', 'alta'].forEach(c => {
+      const el = document.getElementById('carga-' + c);
+      if (el) el.className = `carga-pill ${c}${load === c ? ' active' : ''}`;
+    });
+    const cargaDetailEl = document.getElementById('carga-detail');
+    if (cargaDetailEl) cargaDetailEl.textContent = LOAD_DESC[load];
 
-  // ── Recommendations ──────────────────────────────────────
-  const recs = getRecommendations();
-  document.getElementById('dc-recs').innerHTML = recs.map(r =>
-    `<div class="rec-item"><span class="rec-arrow">→</span>${r}</div>`
-  ).join('');
+    // ── Racha & semana ───────────────────────────────────────
+    setVal('dc-streak', streak);
+    const weekLabelEl = document.getElementById('dc-week-label');
+    if (weekLabelEl) weekLabelEl.textContent = `Esta semana: ${weekStats.daysCompleted}/7 días`;
+
+    const weekDotsEl = document.getElementById('dc-week-dots');
+    if (weekDotsEl) {
+      weekDotsEl.innerHTML = getWeekDots().map(d =>
+        `<div class="week-dot${d.done ? ' done' : ''}${d.isToday ? ' today' : ''}"></div>`
+      ).join('');
+    }
+
+    // ── Historial 7 días ────────────────────────────────────
+    const SESSION_ICONS = { casa: '🏠', recovery: '☁️', aguas: '🌊' };
+    const historyEl = document.getElementById('dc-history');
+    if (historyEl) {
+      const last7 = getLast7Days();
+      historyEl.innerHTML = last7.map(day => {
+        const s = day.session;
+        const sc = s ? Math.min(100, Math.max(0, s.score || 0)) : 0;
+        const scorePct   = sc + '%';
+        const scoreCol   = s ? `var(--${getScoreColor(sc)})` : 'var(--border)';
+        const icon       = s ? (SESSION_ICONS[s.sessionType] || '🏠') : '·';
+        const isPartial  = s && !s.routineCompleted;
+        return `<div class="history-day${s ? ' done' : ''}${isPartial ? ' partial' : ''}${day.isToday ? ' today' : ''}"
+                     style="--score-pct:${scorePct};--score-color:${scoreCol}">
+                  <div class="hd-day">${day.label}</div>
+                  <div class="hd-icon">${icon}</div>
+                  <div class="hd-score">${s && sc > 0 ? sc : '—'}</div>
+                </div>`;
+      }).join('');
+    }
+
+    // ── Recomendaciones ──────────────────────────────────────
+    const recsEl = document.getElementById('dc-recs');
+    if (recsEl) {
+      const recs = getRecommendations();
+      recsEl.innerHTML = recs.map(r =>
+        `<div class="rec-item"><span class="rec-arrow">→</span>${r}</div>`
+      ).join('');
+    }
+
+  } catch (err) {
+    console.error('[renderDashboard] Error:', err);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
