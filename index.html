@@ -7,602 +7,642 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="AquaForce">
-  <meta name="description" content="Entrenamiento funcional híbrido: fuerza + control + agua">
-
   <title>AquaForce Training</title>
-
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23060c14'/><circle cx='16' cy='16' r='12' fill='none' stroke='%230BFFF0' stroke-width='2'/><text x='16' y='21' text-anchor='middle' fill='%230BFFF0' font-size='11' font-weight='bold' font-family='system-ui'>AF</text></svg>">
 </head>
 <body>
-
 <div id="app">
 
-  <!-- ═══════════════════════════════════════
-       PAGE: INICIO
-  ═══════════════════════════════════════ -->
-  <div class="page" id="page-home">
-
-    <div class="page-inner">
-
-      <!-- Hero Card -->
-      <div class="hero" id="home-hero">
-        <div class="hero-date-row">
-          <span class="hero-date" id="home-date">Lunes, 28 Ene</span>
-          <div class="hero-streak">
-            <span class="fire">🔥</span>
-            <span class="days" id="home-streak">0</span>
-            <span class="text">DÍAS</span>
-          </div>
-        </div>
-
-        <div class="hero-day" id="home-day-name">Lunes</div>
-        <div class="hero-focus" id="home-focus">Pierna + Core</div>
-
-        <div class="coach-msg">
-          <p id="home-coach-msg">Cargando tu rutina...</p>
-        </div>
-
-        <div class="hero-meta">
-          <div class="meta-pill">
-            <span class="icon">⏱</span>
-            <span id="home-duration">25 min</span>
-          </div>
-          <div class="meta-pill">
-            <span class="icon">🎯</span>
-            <span id="home-goal-pill">Fuerza + control</span>
-          </div>
-        </div>
-
-        <div class="tags" id="home-tags" style="margin-bottom:18px"></div>
-
-        <!-- Completed banner (hidden by default) -->
-        <div class="completed-banner" id="home-completed-banner" style="display:none">
-          <span class="check">✅</span>
-          <p>¡Rutina completada hoy! Gran trabajo.</p>
-        </div>
-
-        <div class="hero-actions">
-          <button class="btn btn-primary" id="btn-start-routine">
-            ▶ Empezar rutina
-          </button>
-          <button class="btn btn-secondary" id="btn-see-tomorrow">
-            Ver mañana →
-          </button>
+<!-- ══════════════════════ PAGE: INICIO ══════════════════════ -->
+<div class="page" id="page-home">
+  <div class="page-inner">
+    <div class="hero" id="home-hero">
+      <div class="hero-date-row">
+        <span class="hero-date" id="home-date">Lunes, 28 Ene</span>
+        <div class="hero-streak">
+          <span class="fire">🔥</span>
+          <span class="days" id="home-streak">0</span>
+          <span class="text">DÍAS</span>
         </div>
       </div>
-
-      <!-- Mini Stats -->
-      <div class="mini-stats">
-        <div class="mini-stat">
-          <div class="val" id="stat-week-days">0</div>
-          <div class="lbl">Días / Semana</div>
-        </div>
-        <div class="mini-stat">
-          <div class="val" id="stat-week-min">0</div>
-          <div class="lbl">Min / Semana</div>
-        </div>
-        <div class="mini-stat">
-          <div class="val" id="stat-total-sessions">0</div>
-          <div class="lbl">Sesiones</div>
-        </div>
+      <div class="hero-day"   id="home-day-name">Lunes</div>
+      <div class="hero-focus" id="home-focus">Pierna + Core</div>
+      <div class="coach-msg"><p id="home-coach-msg">Cargando...</p></div>
+      <div class="hero-meta">
+        <div class="meta-pill"><span class="icon">⏱</span><span id="home-duration">25 min</span></div>
+        <div class="meta-pill"><span class="icon">🎯</span><span id="home-goal-pill">Fuerza + control</span></div>
       </div>
-
-      <!-- Tomorrow card -->
-      <div class="tomorrow-card" id="tomorrow-card">
-        <div class="head">
-          <span>MAÑANA</span>
-          <span id="tomorrow-load-badge" class="tag core">Media</span>
-        </div>
-        <div class="title" id="tomorrow-name">Cargando...</div>
-        <div class="tags" id="tomorrow-tags" style="margin:6px 0"></div>
-        <div class="tip" id="tomorrow-tip">Hidratarte bien esta noche te ayudará mañana.</div>
+      <div class="tags" id="home-tags" style="margin-bottom:18px"></div>
+      <div class="completed-banner" id="home-completed-banner" style="display:none">
+        <span class="check">✅</span><p>¡Rutina completada hoy!</p>
       </div>
+      <div class="hero-actions">
+        <button class="btn btn-primary"   id="btn-start-routine">▶ Empezar rutina</button>
+        <button class="btn btn-secondary" id="btn-see-tomorrow">Ver mañana →</button>
+      </div>
+    </div>
 
+    <div class="mini-stats">
+      <div class="mini-stat"><div class="val" id="stat-week-days">0</div><div class="lbl">Días / Sem</div></div>
+      <div class="mini-stat"><div class="val" id="stat-week-min">0</div><div class="lbl">Min / Sem</div></div>
+      <div class="mini-stat"><div class="val" id="stat-total-sessions">0</div><div class="lbl">Sesiones</div></div>
+    </div>
+
+    <!-- Medidas CTA -->
+    <button class="btn btn-secondary" id="btn-open-measures" style="margin-bottom:14px">
+      📏 Mis medidas corporales
+    </button>
+
+    <div class="tomorrow-card" id="tomorrow-card">
+      <div class="head">
+        <span>MAÑANA</span>
+        <span id="tomorrow-load-badge" class="tag core">Media</span>
+      </div>
+      <div class="title" id="tomorrow-name">Cargando...</div>
+      <div class="tags" id="tomorrow-tags" style="margin:6px 0"></div>
+      <div class="tip"  id="tomorrow-tip">Hidratarte bien esta noche te ayudará mañana.</div>
     </div>
   </div>
+</div>
 
-  <!-- ═══════════════════════════════════════
-       PAGE: HOY / RUTINA
-  ═══════════════════════════════════════ -->
-  <div class="page" id="page-today">
-    <div class="page-inner">
-
-      <!-- Routine Header -->
-      <div class="routine-header">
-        <div class="section-title" id="today-day-label">LUNES</div>
-        <div class="routine-name" id="today-routine-name">Pierna + Core</div>
-        <div class="routine-goal" id="today-routine-goal">Fortalecer piernas para la patada + activar core profundo</div>
-        <div class="tags" id="today-tags" style="margin-bottom:12px"></div>
-
-        <!-- Intensity selector -->
-        <div style="margin-bottom:12px">
-          <div class="section-title" style="margin-bottom:6px">MODO DE HOY</div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-ghost btn-sm active" data-mode="normal" id="mode-normal">Normal</button>
-            <button class="btn btn-ghost btn-sm" data-mode="ligero" id="mode-ligero">Ligero</button>
-            <button class="btn btn-ghost btn-sm" data-mode="intenso" id="mode-intenso">Intenso</button>
-          </div>
-        </div>
-
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <span class="section-title" style="margin:0">PROGRESO</span>
-          <span id="today-progress-text" style="font-family:var(--font-ui);font-size:12px;font-weight:700;color:var(--aqua)">0 / 0</span>
-        </div>
-        <div class="routine-progress">
-          <div class="routine-progress-fill" id="today-progress-fill" style="width:0%"></div>
+<!-- ══════════════════════ PAGE: HOY ══════════════════════ -->
+<div class="page" id="page-today">
+  <div class="page-inner">
+    <div class="routine-header">
+      <div class="section-title" id="today-day-label">LUNES</div>
+      <div class="routine-name" id="today-routine-name">Pierna + Core</div>
+      <div class="routine-goal" id="today-routine-goal">Fortalecer piernas para la patada en natación</div>
+      <div class="tags" id="today-tags" style="margin-bottom:12px"></div>
+      <div style="margin-bottom:12px">
+        <div class="section-title" style="margin-bottom:6px">MODO DE HOY</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm active" data-mode="normal"  id="mode-normal">Normal</button>
+          <button class="btn btn-ghost btn-sm"        data-mode="ligero"  id="mode-ligero">Ligero</button>
+          <button class="btn btn-ghost btn-sm"        data-mode="intenso" id="mode-intenso">Intenso</button>
         </div>
       </div>
-
-      <!-- Exercise list -->
-      <div id="today-exercise-list"></div>
-
-      <!-- Complete routine button -->
-      <button class="btn btn-primary" id="btn-complete-routine" style="margin-top:8px">
-        ✅ Finalizar sesión del día
-      </button>
-
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span class="section-title" style="margin:0">PROGRESO</span>
+        <span id="today-progress-text" style="font-family:var(--font-ui);font-size:12px;font-weight:700;color:var(--aqua)">0 / 0</span>
+      </div>
+      <div class="routine-progress">
+        <div class="routine-progress-fill" id="today-progress-fill" style="width:0%"></div>
+      </div>
     </div>
+    <div id="today-exercise-list"></div>
+    <button class="btn btn-primary" id="btn-complete-routine" style="margin-top:8px">
+      ✅ Finalizar sesión del día
+    </button>
   </div>
+</div>
 
-  <!-- ═══════════════════════════════════════
-       PAGE: DASHBOARD
-  ═══════════════════════════════════════ -->
-  <div class="page" id="page-dashboard">
-    <div class="page-header">
-      <div class="eyebrow">Tu rendimiento</div>
-      <h1>Dashboard</h1>
+<!-- ══════════════════════ PAGE: DASHBOARD ══════════════════════ -->
+<div class="page" id="page-dashboard">
+  <div class="page-header">
+    <div class="eyebrow">Tu rendimiento</div>
+    <h1>Dashboard</h1>
+  </div>
+  <div class="page-inner">
+
+    <div class="dash-score-section" id="dash-score-section">
+      <div class="score-circle lg" id="main-score-circle">
+        <svg viewBox="0 0 210 210">
+          <circle class="track"       cx="105" cy="105" r="92" stroke-width="12"/>
+          <circle class="track-ticks" cx="105" cy="105" r="92" stroke-width="12"/>
+          <circle class="fill aqua" id="main-score-fill" cx="105" cy="105" r="92" stroke-width="12"
+            stroke-dasharray="578" stroke-dashoffset="578"/>
+        </svg>
+        <div class="inner">
+          <div class="num aqua" id="main-score-num">—</div>
+          <div class="lbl">SCORE</div>
+        </div>
+      </div>
+      <div class="dash-score-label">SCORE DEL DÍA</div>
+      <div class="dash-score-status" id="dash-score-status">Sin sesión aún</div>
+      <div class="score-breakdown">
+        <div class="score-component c-completion"><div class="sc-val" id="sc-completion">—</div><div class="sc-lbl">Compl.</div></div>
+        <div class="score-component c-volume">    <div class="sc-val" id="sc-volume">—</div>    <div class="sc-lbl">Volumen</div></div>
+        <div class="score-component c-time">      <div class="sc-val" id="sc-time">—</div>      <div class="sc-lbl">Tiempo</div></div>
+        <div class="score-component c-energy">    <div class="sc-val" id="sc-energy-comp">—</div><div class="sc-lbl">Energía</div></div>
+      </div>
     </div>
 
-    <div class="page-inner">
+    <div class="dash-phrase" id="dash-phrase">La constancia construye más que la intensidad. Muéstrate hoy.</div>
 
-      <!-- Main Score -->
-      <div class="dash-score-section" id="dash-score-section">
-        <div class="score-circle lg" id="main-score-circle">
-          <svg viewBox="0 0 210 210">
-            <circle class="track" cx="105" cy="105" r="92" stroke-width="12"/>
-            <circle class="track-ticks" cx="105" cy="105" r="92" stroke-width="12"/>
-            <circle class="fill aqua" id="main-score-fill" cx="105" cy="105" r="92" stroke-width="12"
-              stroke-dasharray="578" stroke-dashoffset="578"/>
+    <div class="dash-section-title">Métricas del día</div>
+    <div class="dash-grid">
+      <div class="dash-card accent-aqua">
+        <div class="dc-label">Tiempo entrenado</div>
+        <div class="dc-value aqua" id="dc-time"><span id="dc-time-num">0</span><span class="dc-unit">min</span></div>
+        <div class="dc-sub" id="dc-time-sub">de 25 min meta</div>
+        <div class="dc-bar-wrap"><div class="dc-bar" id="dc-time-bar" style="width:0%"></div></div>
+      </div>
+      <div class="dash-card accent-orange">
+        <div class="dc-label">Series realizadas</div>
+        <div class="dc-value orange" id="dc-series">0</div>
+        <div class="dc-sub" id="dc-series-sub">de 0 planificadas</div>
+        <div class="dc-bar-wrap"><div class="dc-bar orange" id="dc-series-bar" style="width:0%"></div></div>
+      </div>
+      <div class="dash-card accent-green">
+        <div class="dc-label">Ejercicios</div>
+        <div class="dc-value green" id="dc-exercises">0</div>
+        <div class="dc-sub" id="dc-exercises-sub">de 0 planificados</div>
+        <div class="dc-bar-wrap"><div class="dc-bar green" id="dc-exercises-bar" style="width:0%"></div></div>
+      </div>
+      <div class="dash-card accent-yellow">
+        <div class="dc-label">Energía</div>
+        <div class="dc-value" id="dc-energy" style="color:var(--yellow)">—</div>
+        <div class="dc-sub" id="dc-energy-label">Sin registrar</div>
+        <div class="energy-bar-row">
+          <div class="energy-seg e1"></div><div class="energy-seg e2"></div>
+          <div class="energy-seg e3"></div><div class="energy-seg e4"></div>
+          <div class="energy-seg e5"></div>
+        </div>
+      </div>
+      <div class="dash-card full">
+        <div class="dc-label">Carga del día</div>
+        <div class="carga-row">
+          <div class="carga-pill suave"    id="carga-suave">⬤ Suave</div>
+          <div class="carga-pill moderada" id="carga-moderada">⬤ Moderada</div>
+          <div class="carga-pill alta"     id="carga-alta">⬤ Alta</div>
+        </div>
+        <div id="carga-detail" style="margin-top:8px;font-family:var(--font-body);font-size:11px;color:var(--text-muted)">
+          Basada en series planificadas y duración de la rutina
+        </div>
+      </div>
+    </div>
+
+    <div class="dash-section-title">Score semanal</div>
+    <div class="dash-grid" style="margin-bottom:16px">
+      <div class="dash-card accent-aqua">
+        <div class="dc-label">Promedio semanal</div>
+        <div class="dc-value aqua" id="dc-week-score">—</div>
+        <div class="dc-sub">Score / día entrenado</div>
+      </div>
+      <div class="dash-card accent-green">
+        <div class="dc-label">Mejor score</div>
+        <div class="dc-value green" id="dc-week-best">—</div>
+        <div class="dc-sub">Esta semana</div>
+      </div>
+      <div class="dash-card full">
+        <div class="dc-label" style="margin-bottom:12px">Racha & semana</div>
+        <div style="display:flex;align-items:center;gap:24px">
+          <div style="text-align:center">
+            <div class="dc-value orange" id="dc-streak">0</div>
+            <div style="font-family:var(--font-ui);font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:4px">Racha 🔥</div>
+          </div>
+          <div style="flex:1">
+            <div style="font-family:var(--font-body);font-size:12px;color:var(--text-secondary);margin-bottom:8px" id="dc-week-label">Esta semana: 0/7</div>
+            <div class="week-dots" id="dc-week-dots"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dash-section-title">Últimos 7 días</div>
+    <div class="dash-card full" style="margin-bottom:16px">
+      <div class="history-grid" id="dc-history"></div>
+    </div>
+
+    <div class="dash-section-title">Recomendaciones</div>
+    <div class="dash-card full"><div id="dc-recs"></div></div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════ PAGE: EJERCICIOS ══════════════════════ -->
+<div class="page" id="page-exercises">
+  <div class="page-header"><div class="eyebrow">Biblioteca</div><h1>Ejercicios</h1></div>
+  <div class="page-inner">
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="exercise-search" placeholder="Buscar ejercicio...">
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn active" data-filter="all">Todos</button>
+      <button class="filter-btn" data-filter="pierna">Pierna</button>
+      <button class="filter-btn" data-filter="core">Core</button>
+      <button class="filter-btn" data-filter="estabilidad">Estabilidad</button>
+      <button class="filter-btn" data-filter="barra">Barra</button>
+      <button class="filter-btn" data-filter="natacion">Natación</button>
+      <button class="filter-btn" data-filter="recovery">Recovery</button>
+    </div>
+    <div id="exercise-library-list"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════ PAGE: CONFIG ══════════════════════ -->
+<div class="page" id="page-settings">
+  <div class="page-header"><div class="eyebrow">Personalización</div><h1>Config</h1></div>
+  <div class="page-inner">
+
+    <div class="settings-section">
+      <div class="settings-section-title">Perfil</div>
+      <div class="settings-card">
+        <div class="settings-row">
+          <span class="sr-label">Nombre</span>
+          <input id="cfg-name" type="text" value="Atleta" style="background:transparent;border:none;color:var(--aqua);font-family:var(--font-ui);font-size:15px;font-weight:700;text-align:right;outline:none;width:140px">
+        </div>
+        <div class="settings-row">
+          <span class="sr-label">Objetivo</span>
+          <input id="cfg-goal" type="text" value="Funcional + agua" style="background:transparent;border:none;color:var(--text-muted);font-family:var(--font-body);font-size:13px;text-align:right;outline:none;width:150px">
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Modo de entrenamiento</div>
+      <div class="mode-selector">
+        <div class="mode-btn ligero"        data-cfg-mode="ligero">☁️ Ligero</div>
+        <div class="mode-btn normal active"  data-cfg-mode="normal">⚡ Normal</div>
+        <div class="mode-btn intenso"       data-cfg-mode="intenso">🔥 Intenso</div>
+      </div>
+      <div style="margin-top:8px;padding:0 4px">
+        <div id="cfg-mode-desc" class="card-sub" style="font-size:12px">Sesiones completas con el volumen recomendado.</div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Meta diaria</div>
+      <div class="settings-card">
+        <div class="settings-row">
+          <span class="sr-label">Tiempo meta (min)</span>
+          <input id="cfg-daily-min" type="number" value="25" min="10" max="90" style="background:transparent;border:none;color:var(--aqua);font-family:var(--font-display);font-size:22px;font-weight:800;text-align:right;outline:none;width:60px">
+        </div>
+        <div class="settings-row">
+          <span class="sr-label">Series meta diarias</span>
+          <input id="cfg-daily-series" type="number" value="20" min="5" max="60" style="background:transparent;border:none;color:var(--aqua);font-family:var(--font-display);font-size:22px;font-weight:800;text-align:right;outline:none;width:60px">
+        </div>
+      </div>
+    </div>
+
+    <!-- Medidas shortcut -->
+    <div class="settings-section">
+      <div class="settings-section-title">Medidas corporales</div>
+      <div class="settings-card">
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+          <div id="measures-last-date" style="font-family:var(--font-body);font-size:12px;color:var(--text-muted)">Sin medidas registradas</div>
+          <button class="btn btn-secondary btn-sm" id="btn-open-measures-cfg" style="width:100%">📏 Ver / Registrar medidas</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Datos</div>
+      <div class="settings-card">
+        <div class="settings-row">
+          <span class="sr-label">Cargar datos demo</span>
+          <button class="btn btn-ghost btn-sm" id="btn-load-demo" style="width:auto">Cargar demo</button>
+        </div>
+        <div class="settings-row">
+          <span class="sr-label">Borrar todo</span>
+          <button class="btn btn-sm" id="btn-clear-data" style="width:auto;background:rgba(255,59,92,0.1);color:var(--red);border:1px solid rgba(255,59,92,0.3)">Borrar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Registrar sesión manual</div>
+      <div class="tracker-form">
+        <div class="form-group">
+          <label>Tipo de sesión</label>
+          <div class="session-type-row">
+            <button class="session-type-btn selected" data-stype="casa">🏠 Casa</button>
+            <button class="session-type-btn" data-stype="recovery">☁️ Recovery</button>
+            <button class="session-type-btn" data-stype="aguas">🌊 Aguas abiertas</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Energía del día (1-5)</label>
+          <div class="energy-selector">
+            <button class="energy-btn" data-e="1">1</button>
+            <button class="energy-btn" data-e="2">2</button>
+            <button class="energy-btn" data-e="3">3</button>
+            <button class="energy-btn" data-e="4">4</button>
+            <button class="energy-btn" data-e="5">5</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Tiempo entrenado (min)</label>
+          <input type="number" id="manual-time" min="0" max="120" placeholder="25">
+        </div>
+        <div class="form-group">
+          <label>Molestias o dolor</label>
+          <input type="text" id="manual-pain" placeholder="Ej: ninguna / rodilla derecha">
+        </div>
+        <div class="form-group">
+          <label>Notas rápidas</label>
+          <textarea id="manual-notes" placeholder="¿Cómo fue?"></textarea>
+        </div>
+        <button class="btn btn-primary" id="btn-save-session">Guardar sesión</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Historial de sesiones</div>
+      <div id="sessions-log"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════ BOTTOM NAV ══════════════════════ -->
+<nav id="bottom-nav">
+  <button class="nav-item active" data-page="home">
+    <svg viewBox="0 0 24 24" stroke-width="1.8" fill="none">
+      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+      <polyline points="9,22 9,12 15,12 15,22"/>
+    </svg>
+    <span>Inicio</span>
+  </button>
+  <button class="nav-item" data-page="today">
+    <svg viewBox="0 0 24 24" stroke-width="1.8" fill="none">
+      <circle cx="12" cy="12" r="10"/>
+      <polyline points="12,6 12,12 16,14"/>
+    </svg>
+    <span>Hoy</span>
+  </button>
+  <button class="nav-item" data-page="dashboard">
+    <svg viewBox="0 0 24 24" stroke-width="1.8" fill="none">
+      <path d="M18 20V10M12 20V4M6 20v-6"/>
+    </svg>
+    <span>Score</span>
+  </button>
+  <button class="nav-item" data-page="exercises">
+    <svg viewBox="0 0 24 24" stroke-width="1.8" fill="none">
+      <path d="M6.5 6.5h11M6.5 12h11M6.5 17.5h11"/>
+      <path d="M3 6.5h1M3 12h1M3 17.5h1M20 6.5h1M20 12h1M20 17.5h1"/>
+    </svg>
+    <span>Ejercicios</span>
+  </button>
+  <button class="nav-item" data-page="settings">
+    <svg viewBox="0 0 24 24" stroke-width="1.8" fill="none">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+    </svg>
+    <span>Config</span>
+  </button>
+</nav>
+
+<!-- ══════════════════════ TIMER MODAL ══════════════════════ -->
+<div class="modal-overlay hidden" id="timer-modal">
+  <div class="modal-inner">
+
+    <div style="text-align:center;margin-bottom:10px">
+      <div class="section-title" id="modal-ex-order">Ejercicio 1 de 8</div>
+      <div class="modal-ex-name"   id="modal-ex-name">Gato-Vaca</div>
+      <div class="modal-ex-target" id="modal-ex-target">3 series · 30 seg</div>
+    </div>
+
+    <div style="display:flex;justify-content:center;margin-bottom:14px">
+      <div class="state-badge work" id="modal-state-badge">
+        <div class="state-indicator"></div>TRABAJO
+      </div>
+    </div>
+
+    <!-- Dual circles -->
+    <div class="dual-circles">
+      <div class="circle-unit">
+        <div class="circle-unit-label">TIEMPO SERIE</div>
+        <div class="score-circle" id="timer-circle">
+          <svg viewBox="0 0 160 160">
+            <circle class="track"       cx="80" cy="80" r="66" stroke-width="11"/>
+            <circle class="track-ticks" cx="80" cy="80" r="66" stroke-width="11"/>
+            <circle class="fill aqua" id="timer-fill" cx="80" cy="80" r="66" stroke-width="11"
+              stroke-dasharray="415" stroke-dashoffset="0"/>
           </svg>
           <div class="inner">
-            <div class="num aqua" id="main-score-num">—</div>
-            <div class="lbl">SCORE</div>
-          </div>
-        </div>
-        <div class="dash-score-label">SCORE DEL DÍA</div>
-        <div class="dash-score-status" id="dash-score-status">Sin sesión aún</div>
-
-        <!-- Score breakdown: 4 components -->
-        <div class="score-breakdown" id="score-breakdown">
-          <div class="score-component c-completion">
-            <div class="sc-val" id="sc-completion">—</div>
-            <div class="sc-lbl">Compl.</div>
-          </div>
-          <div class="score-component c-volume">
-            <div class="sc-val" id="sc-volume">—</div>
-            <div class="sc-lbl">Volumen</div>
-          </div>
-          <div class="score-component c-time">
-            <div class="sc-val" id="sc-time">—</div>
-            <div class="sc-lbl">Tiempo</div>
-          </div>
-          <div class="score-component c-energy">
-            <div class="sc-val" id="sc-energy-comp">—</div>
-            <div class="sc-lbl">Energía</div>
+            <div class="num aqua" id="timer-display" style="font-size:30px;letter-spacing:-1px">00:00</div>
           </div>
         </div>
       </div>
-
-      <!-- Phrase -->
-      <div class="dash-phrase" id="dash-phrase">
-        La constancia construye más que la intensidad. Muéstrate hoy.
-      </div>
-
-      <!-- Stats grid -->
-      <div class="dash-section-title">Métricas del día</div>
-      <div class="dash-grid">
-
-        <div class="dash-card accent-aqua">
-          <div class="dc-label">Tiempo entrenado</div>
-          <div class="dc-value aqua" id="dc-time"><span id="dc-time-num">0</span><span class="dc-unit">min</span></div>
-          <div class="dc-sub" id="dc-time-sub">de 25 min meta</div>
-          <div class="dc-bar-wrap"><div class="dc-bar" id="dc-time-bar" style="width:0%"></div></div>
-        </div>
-
-        <div class="dash-card accent-orange">
-          <div class="dc-label">Series realizadas</div>
-          <div class="dc-value orange" id="dc-series">0</div>
-          <div class="dc-sub" id="dc-series-sub">de 0 planificadas</div>
-          <div class="dc-bar-wrap"><div class="dc-bar orange" id="dc-series-bar" style="width:0%"></div></div>
-        </div>
-
-        <div class="dash-card accent-green">
-          <div class="dc-label">Ejercicios</div>
-          <div class="dc-value green" id="dc-exercises">0</div>
-          <div class="dc-sub" id="dc-exercises-sub">de 0 planificados</div>
-          <div class="dc-bar-wrap"><div class="dc-bar green" id="dc-exercises-bar" style="width:0%"></div></div>
-        </div>
-
-        <div class="dash-card accent-yellow">
-          <div class="dc-label">Energía</div>
-          <div class="dc-value" id="dc-energy" style="color:var(--yellow)">—</div>
-          <div class="dc-sub" id="dc-energy-label">Sin registrar</div>
-          <div class="energy-bar-row" id="dc-energy-bar">
-            <div class="energy-seg e1"></div>
-            <div class="energy-seg e2"></div>
-            <div class="energy-seg e3"></div>
-            <div class="energy-seg e4"></div>
-            <div class="energy-seg e5"></div>
-          </div>
-        </div>
-
-        <!-- Carga full-width -->
-        <div class="dash-card full">
-          <div class="dc-label">Carga del día</div>
-          <div class="carga-row">
-            <div class="carga-pill suave"    id="carga-suave">⬤ Suave</div>
-            <div class="carga-pill moderada" id="carga-moderada">⬤ Moderada</div>
-            <div class="carga-pill alta"     id="carga-alta">⬤ Alta</div>
-          </div>
-          <div style="margin-top:8px;font-family:var(--font-body);font-size:11px;color:var(--text-muted)" id="carga-detail">
-            Basada en series planificadas y duración de la rutina
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Sección semanal acumulada -->
-      <div class="dash-section-title">Score semanal acumulado</div>
-      <div class="dash-grid" style="margin-bottom:16px">
-
-        <div class="dash-card accent-aqua">
-          <div class="dc-label">Promedio semanal</div>
-          <div class="dc-value aqua" id="dc-week-score">—</div>
-          <div class="dc-sub">Score / día entrenado</div>
-        </div>
-
-        <div class="dash-card accent-green">
-          <div class="dc-label">Mejor score</div>
-          <div class="dc-value green" id="dc-week-best">—</div>
-          <div class="dc-sub">Esta semana</div>
-        </div>
-
-        <!-- Streak & week -->
-        <div class="dash-card full">
-          <div class="dc-label" style="margin-bottom:12px">Racha & semana</div>
-          <div style="display:flex;align-items:center;gap:24px">
-            <div style="text-align:center">
-              <div class="dc-value orange" id="dc-streak">0</div>
-              <div style="font-family:var(--font-ui);font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:4px">Racha 🔥</div>
-            </div>
-            <div style="flex:1">
-              <div style="font-family:var(--font-body);font-size:12px;color:var(--text-secondary);margin-bottom:8px" id="dc-week-label">Esta semana: 0/7</div>
-              <div class="week-dots" id="dc-week-dots"></div>
+      <div class="circle-unit">
+        <div class="circle-unit-label">SERIES</div>
+        <div class="score-circle" id="series-circle">
+          <svg viewBox="0 0 160 160">
+            <circle class="track"       cx="80" cy="80" r="66" stroke-width="11"/>
+            <circle class="track-ticks" cx="80" cy="80" r="66" stroke-width="11"/>
+            <circle class="fill orange" id="series-fill" cx="80" cy="80" r="66" stroke-width="11"
+              stroke-dasharray="415" stroke-dashoffset="415"/>
+          </svg>
+          <div class="inner">
+            <div class="num" style="font-size:28px;letter-spacing:-1px">
+              <span id="series-current" style="color:var(--orange)">0</span>
+              <span style="color:var(--text-muted);font-size:18px">/</span>
+              <span id="series-total"   style="color:var(--text-muted)">3</span>
             </div>
           </div>
         </div>
-
       </div>
-
-      <!-- 7-day history -->
-      <div class="dash-section-title">Últimos 7 días</div>
-      <div class="dash-card full" style="margin-bottom:16px">
-        <div class="history-grid" id="dc-history"></div>
-      </div>
-
-      <!-- Recommendations -->
-      <div class="dash-section-title">Recomendaciones</div>
-      <div class="dash-card full" id="dc-recs-card">
-        <div id="dc-recs"></div>
-      </div>
-
     </div>
+
+    <!-- Weight -->
+    <div class="modal-weight-section">
+      <div class="modal-weight-label">⚖️ PESO DEL EJERCICIO</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 0">
+        <button class="modal-weight-btn" id="modal-weight-minus">−</button>
+        <div style="display:flex;align-items:baseline;gap:3px">
+          <input type="number" class="modal-weight-input" id="modal-weight-input" min="0" max="200" step="0.5" placeholder="—">
+          <span class="modal-weight-unit">kg</span>
+        </div>
+        <button class="modal-weight-btn" id="modal-weight-plus">+</button>
+      </div>
+      <div class="modal-weight-hint" id="modal-weight-hint">Sin registro previo</div>
+    </div>
+
+    <!-- Info -->
+    <div class="modal-info-card">
+      <div class="info-item">
+        <div class="info-val" id="modal-rest-val">60s</div>
+        <div class="info-lbl">Descanso</div>
+      </div>
+      <div class="info-item">
+        <div class="info-val" id="modal-reps-val">—</div>
+        <div class="info-lbl">Reps / Tiempo</div>
+      </div>
+      <div class="info-item">
+        <div class="info-val" id="modal-ex-progress">1/8</div>
+        <div class="info-lbl">Prog. rutina</div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="modal-actions">
+      <div class="modal-actions-row">
+        <button class="btn btn-primary" id="modal-btn-start">▶ Iniciar serie</button>
+        <button class="btn btn-ghost btn-icon" id="modal-btn-reset" title="Reiniciar">↺</button>
+      </div>
+      <button class="btn btn-orange"    id="modal-btn-complete-set" disabled>✓ Completar serie</button>
+      <button class="btn btn-secondary" id="modal-btn-rest"         disabled>⏸ Iniciar descanso</button>
+      <button class="btn btn-ghost"     id="modal-btn-next-ex">Siguiente ejercicio →</button>
+    </div>
+    <button class="modal-close-btn" id="modal-btn-close">✕ Cerrar / Volver a lista</button>
+
   </div>
+</div>
 
-  <!-- ═══════════════════════════════════════
-       PAGE: EJERCICIOS
-  ═══════════════════════════════════════ -->
-  <div class="page" id="page-exercises">
-    <div class="page-header">
-      <div class="eyebrow">Biblioteca</div>
-      <h1>Ejercicios</h1>
+<!-- ══════════════════════ MEDIDAS CORPORALES MODAL ══════════════════════ -->
+<div class="modal-overlay hidden" id="measures-modal">
+  <div class="modal-inner" style="max-width:460px">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <div style="font-family:var(--font-ui);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--aqua);margin-bottom:3px">Seguimiento corporal</div>
+        <h2 style="font-family:var(--font-display);font-size:26px;font-weight:800;color:var(--text-primary);line-height:1">Mis medidas</h2>
+      </div>
+      <button id="measures-modal-close" style="width:40px;height:40px;border-radius:50%;background:var(--bg-surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-muted);cursor:pointer;flex-shrink:0">✕</button>
     </div>
 
-    <div class="page-inner">
-      <div class="search-bar">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="exercise-search" placeholder="Buscar ejercicio...">
+    <div class="measures-layout">
+
+      <!-- SVG Diagram -->
+      <div class="body-diagram-wrap">
+        <div class="body-diagram-title">Dónde medir</div>
+        <svg class="body-diagram" viewBox="0 0 160 390" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="glow-a"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <filter id="glow-o"><feGaussianBlur stdDeviation="2"   result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <filter id="glow-g"><feGaussianBlur stdDeviation="2"   result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+
+          <!-- Silueta -->
+          <ellipse cx="80" cy="28" rx="17" ry="21" fill="none" stroke="rgba(180,210,240,0.18)" stroke-width="1.5"/>
+          <path d="M74 47 Q80 52 86 47 L87 57 Q80 60 73 57 Z" fill="none" stroke="rgba(180,210,240,0.18)" stroke-width="1.5"/>
+          <path d="M73 57 Q55 60 48 70 L44 115 Q80 122 116 115 L112 70 Q105 60 87 57 Z" fill="none" stroke="rgba(180,210,240,0.18)" stroke-width="1.5"/>
+          <path d="M48 70 Q36 90 33 115 Q31 122 34 126" fill="none" stroke="rgba(180,210,240,0.18)" stroke-width="1.5"/>
+          <path d="M112 70 Q124 90 127 115 Q129 122 126 126" fill="none" stroke="rgba(180,210,240,0.18)" stroke-width="1.5"/>
+          <ellipse cx="33"  cy="130" rx="5" ry="7" fill="none" stroke="rgba(180,210,240,0.13)" stroke-width="1.2"/>
+          <ellipse cx="127" cy="130" rx="5" ry="7" fill="none" stroke="rgba(180,210,240,0.13)" stroke-width="1.2"/>
+          <path d="M44 115 Q42 135 44 150 Q52 168 80 170 Q108 168 116 150 Q118 135 116 115 Q80 122 44 115Z" fill="none" stroke="rgba(180,210,240,0.18)" stroke-width="1.5"/>
+          <path d="M56 168 Q52 210 50 250 Q48 268 52 285" fill="none" stroke="rgba(180,210,240,0.18)" stroke-width="1.5"/>
+          <path d="M104 168 Q108 210 110 250 Q112 268 108 285" fill="none" stroke="rgba(180,210,240,0.18)" stroke-width="1.5"/>
+          <path d="M52 285 Q50 315 54 348 Q56 358 60 362" fill="none" stroke="rgba(180,210,240,0.18)" stroke-width="1.5"/>
+          <path d="M108 285 Q110 315 106 348 Q104 358 100 362" fill="none" stroke="rgba(180,210,240,0.18)" stroke-width="1.5"/>
+          <ellipse cx="61" cy="366" rx="10" ry="5" fill="none" stroke="rgba(180,210,240,0.13)" stroke-width="1.2"/>
+          <ellipse cx="99" cy="366" rx="10" ry="5" fill="none" stroke="rgba(180,210,240,0.13)" stroke-width="1.2"/>
+
+          <!-- Líneas de medición -->
+          <line x1="45" y1="83"  x2="115" y2="83"  stroke="rgba(11,255,240,0.5)"  stroke-width="1.2" stroke-dasharray="4,3"/>
+          <line x1="46" y1="122" x2="114" y2="122" stroke="rgba(11,255,240,0.5)"  stroke-width="1.2" stroke-dasharray="4,3"/>
+          <line x1="44" y1="155" x2="116" y2="155" stroke="rgba(255,107,43,0.6)"  stroke-width="1.2" stroke-dasharray="4,3"/>
+          <line x1="50" y1="200" x2="80"  y2="200" stroke="rgba(0,229,160,0.6)"   stroke-width="1.2" stroke-dasharray="4,3"/>
+
+          <!-- Puntos numerados -->
+          <!-- 1 Pecho -->
+          <text x="134" y="71" text-anchor="middle" fill="rgba(11,255,240,0.55)" font-size="7" font-family="system-ui" font-weight="600">PECHO</text>
+          <circle cx="134" cy="83"  r="12" fill="rgba(11,255,240,0.1)"  stroke="rgba(11,255,240,0.7)"  stroke-width="1.5" filter="url(#glow-a)"/>
+          <text   x="134" y="88"   text-anchor="middle" fill="#0BFFF0"  font-size="11" font-weight="700" font-family="system-ui">1</text>
+          <line x1="115" y1="83"  x2="122" y2="83"  stroke="rgba(11,255,240,0.4)"  stroke-width="1"/>
+          <!-- 2 Cintura -->
+          <text x="134" y="110" text-anchor="middle" fill="rgba(11,255,240,0.55)" font-size="7" font-family="system-ui" font-weight="600">CINTURA</text>
+          <circle cx="134" cy="122" r="12" fill="rgba(11,255,240,0.1)"  stroke="rgba(11,255,240,0.7)"  stroke-width="1.5" filter="url(#glow-a)"/>
+          <text   x="134" y="127" text-anchor="middle" fill="#0BFFF0"  font-size="11" font-weight="700" font-family="system-ui">2</text>
+          <line x1="114" y1="122" x2="122" y2="122" stroke="rgba(11,255,240,0.4)"  stroke-width="1"/>
+          <!-- 3 Cadera -->
+          <text x="26" y="143"  text-anchor="middle" fill="rgba(255,107,43,0.6)"  font-size="7" font-family="system-ui" font-weight="600">CADERA</text>
+          <circle cx="26"  cy="155" r="12" fill="rgba(255,107,43,0.1)"  stroke="rgba(255,107,43,0.7)" stroke-width="1.5" filter="url(#glow-o)"/>
+          <text   x="26"  y="160" text-anchor="middle" fill="#FF6B2B"   font-size="11" font-weight="700" font-family="system-ui">3</text>
+          <line x1="38"  y1="155" x2="44"  y2="155" stroke="rgba(255,107,43,0.4)" stroke-width="1"/>
+          <!-- 4 Muslo -->
+          <text x="26" y="188"  text-anchor="middle" fill="rgba(0,229,160,0.6)"   font-size="7" font-family="system-ui" font-weight="600">MUSLO</text>
+          <circle cx="26"  cy="200" r="12" fill="rgba(0,229,160,0.1)"   stroke="rgba(0,229,160,0.7)"  stroke-width="1.5" filter="url(#glow-g)"/>
+          <text   x="26"  y="205" text-anchor="middle" fill="#00E5A0"   font-size="11" font-weight="700" font-family="system-ui">4</text>
+          <line x1="38"  y1="200" x2="50"  y2="200" stroke="rgba(0,229,160,0.4)"  stroke-width="1"/>
+          <!-- Peso -->
+          <text x="80" y="278" text-anchor="middle" fill="rgba(155,89,182,0.5)" font-size="8" font-family="system-ui" font-weight="600">⚖ PESO</text>
+        </svg>
+
+        <div class="body-diagram-tips">
+          <div class="tip-row"><span class="tip-num aqua">1</span><span>Pecho: rodea a la altura de los pectorales, brazos relajados al lado</span></div>
+          <div class="tip-row"><span class="tip-num aqua">2</span><span>Cintura: punto más estrecho, justo sobre el ombligo, exhala antes</span></div>
+          <div class="tip-row"><span class="tip-num orange">3</span><span>Cadera: punto más ancho de las nalgas, pies juntos</span></div>
+          <div class="tip-row"><span class="tip-num green">4</span><span>Muslo: 10 cm bajo el pliegue inguinal, pierna relajada sin tensar</span></div>
+        </div>
       </div>
 
-      <div class="filter-row" id="exercise-filters">
-        <button class="filter-btn active" data-filter="all">Todos</button>
-        <button class="filter-btn" data-filter="pierna">Pierna</button>
-        <button class="filter-btn" data-filter="core">Core</button>
-        <button class="filter-btn" data-filter="estabilidad">Estabilidad</button>
-        <button class="filter-btn" data-filter="barra">Barra</button>
-        <button class="filter-btn" data-filter="natacion">Natación</button>
-        <button class="filter-btn" data-filter="recovery">Recovery</button>
-      </div>
+      <!-- Inputs -->
+      <div class="measures-inputs">
 
-      <div id="exercise-library-list"></div>
+        <div class="measure-input-group">
+          <div class="measure-badge" style="background:rgba(11,255,240,0.1);border-color:rgba(11,255,240,0.5);color:var(--aqua)">1</div>
+          <div class="measure-field">
+            <label>Pecho</label>
+            <div class="measure-input-wrap">
+              <input type="number" id="m-pecho" min="50" max="180" step="0.5" placeholder="—">
+              <span>cm</span>
+            </div>
+            <div class="measure-prev" id="prev-pecho">Primera medición</div>
+          </div>
+        </div>
+
+        <div class="measure-input-group">
+          <div class="measure-badge" style="background:rgba(11,255,240,0.1);border-color:rgba(11,255,240,0.5);color:var(--aqua)">2</div>
+          <div class="measure-field">
+            <label>Cintura</label>
+            <div class="measure-input-wrap">
+              <input type="number" id="m-cintura" min="50" max="180" step="0.5" placeholder="—">
+              <span>cm</span>
+            </div>
+            <div class="measure-prev" id="prev-cintura">Primera medición</div>
+          </div>
+        </div>
+
+        <div class="measure-input-group">
+          <div class="measure-badge" style="background:rgba(255,107,43,0.1);border-color:rgba(255,107,43,0.5);color:var(--orange)">3</div>
+          <div class="measure-field">
+            <label>Cadera</label>
+            <div class="measure-input-wrap">
+              <input type="number" id="m-cadera" min="50" max="180" step="0.5" placeholder="—">
+              <span>cm</span>
+            </div>
+            <div class="measure-prev" id="prev-cadera">Primera medición</div>
+          </div>
+        </div>
+
+        <div class="measure-input-group">
+          <div class="measure-badge" style="background:rgba(0,229,160,0.1);border-color:rgba(0,229,160,0.5);color:var(--green)">4</div>
+          <div class="measure-field">
+            <label>Muslo</label>
+            <div class="measure-input-wrap">
+              <input type="number" id="m-muslo" min="20" max="120" step="0.5" placeholder="—">
+              <span>cm</span>
+            </div>
+            <div class="measure-prev" id="prev-muslo">Primera medición</div>
+          </div>
+        </div>
+
+        <div class="measure-input-group">
+          <div class="measure-badge" style="background:rgba(155,89,182,0.1);border-color:rgba(155,89,182,0.5);color:var(--purple)">⚖</div>
+          <div class="measure-field">
+            <label>Peso</label>
+            <div class="measure-input-wrap">
+              <input type="number" id="m-peso" min="40" max="200" step="0.1" placeholder="—">
+              <span>kg</span>
+            </div>
+            <div class="measure-prev" id="prev-peso">Primera medición</div>
+          </div>
+        </div>
+
+        <div class="measure-tip">📐 Mide en ayunas · misma hora · cinta pegada sin apretar</div>
+        <button class="btn btn-primary" id="btn-save-measures" style="margin-top:8px">Guardar medidas</button>
+      </div>
     </div>
+
+    <!-- Historial -->
+    <div style="margin-top:24px">
+      <div class="dash-section-title">Historial de medidas</div>
+      <div id="measures-history"></div>
+    </div>
+
   </div>
+</div>
 
-  <!-- ═══════════════════════════════════════
-       PAGE: CONFIG
-  ═══════════════════════════════════════ -->
-  <div class="page" id="page-settings">
-    <div class="page-header">
-      <div class="eyebrow">Personalización</div>
-      <h1>Config</h1>
-    </div>
+<!-- Toast -->
+<div class="toast" id="app-toast"></div>
 
-    <div class="page-inner">
-
-      <div class="settings-section">
-        <div class="settings-section-title">Perfil</div>
-        <div class="settings-card">
-          <div class="settings-row">
-            <span class="sr-label">Nombre</span>
-            <input id="cfg-name" type="text" value="Atleta"
-              style="background:transparent;border:none;color:var(--aqua);font-family:var(--font-ui);font-size:15px;font-weight:700;text-align:right;outline:none;width:140px">
-          </div>
-          <div class="settings-row">
-            <span class="sr-label">Objetivo</span>
-            <input id="cfg-goal" type="text" value="Funcional + agua"
-              style="background:transparent;border:none;color:var(--text-muted);font-family:var(--font-body);font-size:13px;text-align:right;outline:none;width:150px">
-          </div>
-        </div>
-      </div>
-
-      <div class="settings-section">
-        <div class="settings-section-title">Modo de entrenamiento</div>
-        <div class="mode-selector">
-          <div class="mode-btn ligero"  data-cfg-mode="ligero">☁️ Ligero</div>
-          <div class="mode-btn normal active" data-cfg-mode="normal">⚡ Normal</div>
-          <div class="mode-btn intenso" data-cfg-mode="intenso">🔥 Intenso</div>
-        </div>
-        <div style="margin-top:8px;padding:0 4px">
-          <div id="cfg-mode-desc" class="card-sub" style="font-size:12px">
-            Sesiones completas con el volumen recomendado.
-          </div>
-        </div>
-      </div>
-
-      <div class="settings-section">
-        <div class="settings-section-title">Meta diaria</div>
-        <div class="settings-card">
-          <div class="settings-row">
-            <span class="sr-label">Tiempo meta (min)</span>
-            <input id="cfg-daily-min" type="number" value="25" min="10" max="90"
-              style="background:transparent;border:none;color:var(--aqua);font-family:var(--font-display);font-size:22px;font-weight:800;text-align:right;outline:none;width:60px">
-          </div>
-          <div class="settings-row">
-            <span class="sr-label">Series meta diarias</span>
-            <input id="cfg-daily-series" type="number" value="20" min="5" max="60"
-              style="background:transparent;border:none;color:var(--aqua);font-family:var(--font-display);font-size:22px;font-weight:800;text-align:right;outline:none;width:60px">
-          </div>
-        </div>
-      </div>
-
-      <div class="settings-section">
-        <div class="settings-section-title">Datos</div>
-        <div class="settings-card">
-          <div class="settings-row">
-            <span class="sr-label">Resetear datos (demo)</span>
-            <button class="btn btn-ghost btn-sm" id="btn-load-demo" style="width:auto">
-              Cargar demo
-            </button>
-          </div>
-          <div class="settings-row">
-            <span class="sr-label">Borrar todo</span>
-            <button class="btn btn-sm" id="btn-clear-data"
-              style="width:auto;background:rgba(255,59,92,0.1);color:var(--red);border:1px solid rgba(255,59,92,0.3)">
-              Borrar
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="settings-section">
-        <div class="settings-section-title">Registrar sesión manual</div>
-        <div class="tracker-form" id="manual-tracker-form">
-          <div class="form-group">
-            <label>Tipo de sesión</label>
-            <div class="session-type-row">
-              <button class="session-type-btn selected" data-stype="casa">🏠 Casa</button>
-              <button class="session-type-btn" data-stype="recovery">☁️ Recovery</button>
-              <button class="session-type-btn" data-stype="aguas">🌊 Aguas abiertas</button>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Energía del día (1-5)</label>
-            <div class="energy-selector">
-              <button class="energy-btn" data-e="1">1</button>
-              <button class="energy-btn" data-e="2">2</button>
-              <button class="energy-btn" data-e="3">3</button>
-              <button class="energy-btn" data-e="4">4</button>
-              <button class="energy-btn" data-e="5">5</button>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Tiempo entrenado (min)</label>
-            <input type="number" id="manual-time" min="0" max="120" placeholder="25">
-          </div>
-          <div class="form-group">
-            <label>Molestias o dolor</label>
-            <input type="text" id="manual-pain" placeholder="Ej: ninguna / rodilla derecha">
-          </div>
-          <div class="form-group">
-            <label>Notas rápidas</label>
-            <textarea id="manual-notes" placeholder="¿Cómo fue? ¿Algo para mejorar?"></textarea>
-          </div>
-          <button class="btn btn-primary" id="btn-save-session">
-            Guardar sesión
-          </button>
-        </div>
-      </div>
-
-      <!-- Log history -->
-      <div class="settings-section">
-        <div class="settings-section-title">Historial de sesiones</div>
-        <div id="sessions-log"></div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════
-       BOTTOM NAVIGATION
-  ═══════════════════════════════════════ -->
-  <nav id="bottom-nav">
-    <button class="nav-item active" data-page="home">
-      <svg viewBox="0 0 24 24" stroke-width="1.8">
-        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-        <polyline points="9,22 9,12 15,12 15,22"/>
-      </svg>
-      <span>Inicio</span>
-    </button>
-
-    <button class="nav-item" data-page="today">
-      <svg viewBox="0 0 24 24" stroke-width="1.8">
-        <circle cx="12" cy="12" r="10"/>
-        <polyline points="12,6 12,12 16,14"/>
-      </svg>
-      <span>Hoy</span>
-    </button>
-
-    <button class="nav-item" data-page="dashboard">
-      <svg viewBox="0 0 24 24" stroke-width="1.8">
-        <path d="M18 20V10M12 20V4M6 20v-6"/>
-      </svg>
-      <span>Score</span>
-    </button>
-
-    <button class="nav-item" data-page="exercises">
-      <svg viewBox="0 0 24 24" stroke-width="1.8">
-        <path d="M6.5 6.5h11M6.5 12h11M6.5 17.5h11"/>
-        <path d="M3 6.5h1M3 12h1M3 17.5h1M20 6.5h1M20 12h1M20 17.5h1"/>
-      </svg>
-      <span>Ejercicios</span>
-    </button>
-
-    <button class="nav-item" data-page="settings">
-      <svg viewBox="0 0 24 24" stroke-width="1.8">
-        <circle cx="12" cy="12" r="3"/>
-        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
-      </svg>
-      <span>Config</span>
-    </button>
-  </nav>
-
-  <!-- ═══════════════════════════════════════
-       TIMER MODAL (overlay)
-  ═══════════════════════════════════════ -->
-  <div class="modal-overlay hidden" id="timer-modal">
-    <div class="modal-inner">
-
-      <div style="text-align:center;margin-bottom:16px">
-        <div class="section-title" id="modal-ex-order">Ejercicio 1 de 8</div>
-        <div class="modal-ex-name" id="modal-ex-name">Gato-Vaca</div>
-        <div class="modal-ex-target" id="modal-ex-target">3 series · 30 seg</div>
-      </div>
-
-      <!-- State badge -->
-      <div style="display:flex;justify-content:center;margin-bottom:20px">
-        <div class="state-badge work" id="modal-state-badge">
-          <div class="state-indicator"></div>
-          TRABAJO
-        </div>
-      </div>
-
-      <!-- Dual circles -->
-      <div class="dual-circles">
-        <!-- LEFT: Timer -->
-        <div class="circle-unit">
-          <div class="circle-unit-label">TIEMPO SERIE</div>
-          <div class="score-circle" id="timer-circle">
-            <svg viewBox="0 0 160 160">
-              <circle class="track" cx="80" cy="80" r="66" stroke-width="11"/>
-              <circle class="track-ticks" cx="80" cy="80" r="66" stroke-width="11"/>
-              <circle class="fill aqua" id="timer-fill" cx="80" cy="80" r="66" stroke-width="11"
-                stroke-dasharray="415" stroke-dashoffset="0"/>
-            </svg>
-            <div class="inner">
-              <div class="num aqua" id="timer-display" style="font-size:30px;letter-spacing:-1px">00:00</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- RIGHT: Series counter -->
-        <div class="circle-unit">
-          <div class="circle-unit-label">SERIES</div>
-          <div class="score-circle" id="series-circle">
-            <svg viewBox="0 0 160 160">
-              <circle class="track" cx="80" cy="80" r="66" stroke-width="11"/>
-              <circle class="track-ticks" cx="80" cy="80" r="66" stroke-width="11"/>
-              <circle class="fill orange" id="series-fill" cx="80" cy="80" r="66" stroke-width="11"
-                stroke-dasharray="415" stroke-dashoffset="415"/>
-            </svg>
-            <div class="inner">
-              <div class="num" style="font-size:28px;letter-spacing:-1px">
-                <span id="series-current" style="color:var(--orange)">0</span>
-                <span style="color:var(--text-muted);font-size:18px">/</span>
-                <span id="series-total" style="color:var(--text-muted)">3</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Info card -->
-      <div class="modal-info-card">
-        <div class="info-item">
-          <div class="info-val" id="modal-rest-val">60s</div>
-          <div class="info-lbl">Descanso</div>
-        </div>
-        <div class="info-item">
-          <div class="info-val" id="modal-reps-val">—</div>
-          <div class="info-lbl">Reps / Tiempo</div>
-        </div>
-        <div class="info-item">
-          <div class="info-val" id="modal-ex-progress">1/8</div>
-          <div class="info-lbl">Prog. rutina</div>
-        </div>
-      </div>
-
-      <!-- Actions -->
-      <div class="modal-actions">
-        <div class="modal-actions-row">
-          <button class="btn btn-primary" id="modal-btn-start">▶ Iniciar serie</button>
-          <button class="btn btn-ghost btn-icon" id="modal-btn-reset" title="Reiniciar">↺</button>
-        </div>
-        <button class="btn btn-orange" id="modal-btn-complete-set" disabled>
-          ✓ Completar serie
-        </button>
-        <button class="btn btn-secondary" id="modal-btn-rest" disabled>
-          ⏸ Iniciar descanso
-        </button>
-        <button class="btn btn-ghost" id="modal-btn-next-ex">
-          Siguiente ejercicio →
-        </button>
-      </div>
-
-      <!-- Close -->
-      <button class="modal-close-btn" id="modal-btn-close">
-        ✕ Cerrar / Volver a lista
-      </button>
-
-    </div>
-  </div>
-
-  <!-- Toast notification -->
-  <div class="toast" id="app-toast"></div>
-
-</div><!-- #app -->
-
+</div><!-- /#app -->
 <script src="app.js"></script>
 </body>
 </html>

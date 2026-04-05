@@ -379,7 +379,7 @@ const APP = {
   currentSeriesCount: 0,
   currentExercise: null,
   currentRoutineExercises: [],
-  timerState: 'idle', // idle | work | rest | done
+  timerState: 'idle', // idle | work | rest_running | rest_done | done
 
   settings: {
     name: 'Atleta',
@@ -388,6 +388,12 @@ const APP = {
     dailyMinTarget: 25,
     dailySeriesTarget: 20
   },
+
+  // { exerciseId: kg }  — persisted per exercise across sessions
+  exerciseWeights: {},
+
+  // [ { date, pecho, cintura, cadera, muslo, peso } ]
+  bodyMeasures: [],
 
   sessions: [] // Array of session log objects
 };
@@ -398,10 +404,12 @@ const APP = {
 
 function saveToStorage() {
   try {
-    localStorage.setItem('af_sessions', JSON.stringify(APP.sessions));
-    localStorage.setItem('af_settings', JSON.stringify(APP.settings));
+    localStorage.setItem('af_sessions',        JSON.stringify(APP.sessions));
+    localStorage.setItem('af_settings',        JSON.stringify(APP.settings));
+    localStorage.setItem('af_weights',         JSON.stringify(APP.exerciseWeights));
+    localStorage.setItem('af_measures',        JSON.stringify(APP.bodyMeasures));
     localStorage.setItem('af_completed_today', JSON.stringify({
-      date: getTodayKey(),
+      date:      getTodayKey(),
       exercises: Array.from(APP.completedExercises)
     }));
   } catch(e) { console.warn('Storage error:', e); }
@@ -436,7 +444,11 @@ function loadFromStorage() {
     const settings = localStorage.getItem('af_settings');
     if (settings) APP.settings = { ...APP.settings, ...JSON.parse(settings) };
 
-    const completedToday = localStorage.getItem('af_completed_today');
+    const weights = localStorage.getItem('af_weights');
+    if (weights) APP.exerciseWeights = JSON.parse(weights);
+
+    const measures = localStorage.getItem('af_measures');
+    if (measures) APP.bodyMeasures = JSON.parse(measures);
     if (completedToday) {
       const parsed = JSON.parse(completedToday);
       if (parsed.date === getTodayKey()) {
@@ -939,6 +951,9 @@ function renderExerciseList(exercises, forceRedraw = false) {
     const setsStr = `${ex.sets} series`;
     const restStr = ex.rest ? `${ex.rest}s descanso` : '';
 
+    const weight    = APP.exerciseWeights[ex.id];
+    const weightStr = weight ? `${weight} kg` : null;
+
     card.innerHTML = `
       <div class="ex-head">
         <div class="ex-name">
@@ -951,6 +966,23 @@ function renderExerciseList(exercises, forceRedraw = false) {
         <span class="sep">·</span>
         <span>${repStr}</span>
         ${restStr ? `<span class="sep">·</span><span>${restStr}</span>` : ''}
+      </div>
+      <!-- Weight row -->
+      <div class="ex-weight-row">
+        <span class="ex-weight-label">⚖️ Peso:</span>
+        <button class="ex-weight-badge${weightStr ? '' : ' no-weight'}"
+                onclick="toggleWeightEditor('${ex.id}', this)">
+          ${weightStr ? `${weight}<span class="wt-unit">kg</span>` : '+ Añadir peso'}
+        </button>
+      </div>
+      <!-- Inline weight editor (hidden by default) -->
+      <div class="ex-weight-editor" id="wed-${ex.id}">
+        <button class="we-btn" onclick="stepWeight('${ex.id}', -0.5)">−</button>
+        <input type="number" id="wi-${ex.id}" min="0" max="200" step="0.5"
+               value="${weight || ''}" placeholder="kg">
+        <span class="we-unit">KG</span>
+        <button class="we-btn" onclick="stepWeight('${ex.id}', 0.5)">+</button>
+        <button class="we-save" onclick="saveWeight('${ex.id}')">OK</button>
       </div>
       <div class="ex-note">${ex.note}</div>
       <div class="ex-actions">
@@ -966,13 +998,53 @@ function renderExerciseList(exercises, forceRedraw = false) {
   });
 }
 
+// ── Weight per exercise helpers ────────────────────────────
+
+function toggleWeightEditor(exId, btn) {
+  const editor = document.getElementById('wed-' + exId);
+  if (!editor) return;
+  const isOpen = editor.classList.contains('open');
+  // Close all open editors first
+  document.querySelectorAll('.ex-weight-editor.open').forEach(e => e.classList.remove('open'));
+  if (!isOpen) {
+    editor.classList.add('open');
+    const input = document.getElementById('wi-' + exId);
+    if (input) { input.focus(); input.select(); }
+  }
+}
+
+function stepWeight(exId, delta) {
+  const input = document.getElementById('wi-' + exId);
+  if (!input) return;
+  const current = parseFloat(input.value) || 0;
+  const next = Math.max(0, Math.round((current + delta) * 2) / 2);
+  input.value = next || '';
+}
+
+function saveWeight(exId) {
+  const input = document.getElementById('wi-' + exId);
+  if (!input) return;
+  const val = parseFloat(input.value);
+  if (val > 0) {
+    APP.exerciseWeights[exId] = val;
+  } else {
+    delete APP.exerciseWeights[exId];
+  }
+  saveToStorage();
+  // Close editor and refresh card
+  _lastRenderedExIds = '';
+  renderExerciseList(APP.currentRoutineExercises, true);
+  showToast(val > 0 ? `⚖️ ${val} kg guardado` : 'Peso eliminado');
+}
+
 function updateTodayProgress() {
   const total = APP.totalExercisesToday;
-  const done = APP.completedExercises.size;
-  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-
-  document.getElementById('today-progress-fill').style.width = pct + '%';
-  document.getElementById('today-progress-text').textContent = `${done} / ${total}`;
+  const done  = APP.completedExercises.size;
+  const pct   = total > 0 ? Math.round((done / total) * 100) : 0;
+  const fillEl = document.getElementById('today-progress-fill');
+  const textEl = document.getElementById('today-progress-text');
+  if (fillEl) fillEl.style.width = pct + '%';
+  if (textEl) textEl.textContent = `${done} / ${total}`;
 }
 
 function markExerciseDone(exId) {
@@ -1078,6 +1150,14 @@ function openTimerModal(exerciseIndex) {
   APP.timerSeconds        = 0;
   APP.timerState          = 'idle'; // idle | work | rest_running | rest_done | done
   REST_TOTAL_SECS         = 0;
+
+  // Load weight for this exercise
+  const exId  = APP.currentExercise.id;
+  const kg    = APP.exerciseWeights[exId];
+  const wInput = document.getElementById('modal-weight-input');
+  const wHint  = document.getElementById('modal-weight-hint');
+  if (wInput) wInput.value = kg || '';
+  if (wHint)  wHint.textContent = kg ? `Última vez: ${kg} kg` : 'Sin registro previo';
 
   updateTimerModal();
   document.getElementById('timer-modal').classList.remove('hidden');
@@ -1786,12 +1866,177 @@ function saveSession() {
 // ═══════════════════════════════════════════════════════════
 
 let toastTimeout;
+
 function showToast(msg, type = '') {
   const toast = document.getElementById('app-toast');
+  if (!toast) return;
   toast.textContent = msg;
   toast.className = `toast${type ? ' ' + type : ''} show`;
   clearTimeout(toastTimeout);
   toastTimeout = setTimeout(() => toast.classList.remove('show'), 2800);
+}
+
+// ── Save weight from timer modal ───────────────────────────
+function _saveModalWeight() {
+  if (!APP.currentExercise) return;
+  const inp = document.getElementById('modal-weight-input');
+  const val = parseFloat(inp?.value);
+  const hint = document.getElementById('modal-weight-hint');
+  if (val > 0) {
+    APP.exerciseWeights[APP.currentExercise.id] = val;
+    if (hint) hint.textContent = `Guardado: ${val} kg ✓`;
+  } else {
+    delete APP.exerciseWeights[APP.currentExercise.id];
+    if (hint) hint.textContent = 'Sin registro';
+  }
+  saveToStorage();
+}
+
+// ═══════════════════════════════════════════════════════════
+// MÓDULO DE MEDIDAS CORPORALES
+// ═══════════════════════════════════════════════════════════
+
+const MEASURE_KEYS = ['pecho', 'cintura', 'cadera', 'muslo', 'peso'];
+const MEASURE_LABELS = { pecho: 'Pecho', cintura: 'Cintura', cadera: 'Cadera', muslo: 'Muslo', peso: 'Peso' };
+const MEASURE_UNITS  = { pecho: 'cm', cintura: 'cm', cadera: 'cm', muslo: 'cm', peso: 'kg' };
+// For cintura: smaller = better. For weight: depends. For muslo/pecho: bigger = better (muscle gain)
+const MEASURE_LOWER_IS_BETTER = { pecho: false, cintura: true, cadera: true, muslo: false, peso: true };
+
+function openMeasuresModal() {
+  const modal = document.getElementById('measures-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  renderMeasuresModal();
+}
+
+function closeMeasuresModal() {
+  const modal = document.getElementById('measures-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function renderMeasuresModal() {
+  // Show previous values as hints
+  const last = APP.bodyMeasures.length > 0 ? APP.bodyMeasures[APP.bodyMeasures.length - 1] : null;
+  const prev = APP.bodyMeasures.length > 1 ? APP.bodyMeasures[APP.bodyMeasures.length - 2] : null;
+
+  MEASURE_KEYS.forEach(key => {
+    const input = document.getElementById('m-' + key);
+    const prevEl = document.getElementById('prev-' + key);
+    if (!input || !prevEl) return;
+    // Clear current input for new entry
+    input.value = '';
+    if (last && last[key]) {
+      const unit = MEASURE_UNITS[key];
+      const lowerBetter = MEASURE_LOWER_IS_BETTER[key];
+      if (prev && prev[key]) {
+        const delta = last[key] - prev[key];
+        const improved = lowerBetter ? delta < 0 : delta > 0;
+        const sign = delta > 0 ? '+' : '';
+        const cls = delta === 0 ? 'same' : improved ? 'better' : 'worse';
+        const arrow = delta === 0 ? '→' : improved ? '↓' : '↑';
+        prevEl.className = `measure-prev ${cls}`;
+        prevEl.textContent = `Anterior: ${last[key]}${unit}  ${arrow} ${sign}${delta.toFixed(1)}${unit}`;
+      } else {
+        prevEl.className = 'measure-prev same';
+        prevEl.textContent = `Anterior: ${last[key]}${unit}`;
+      }
+    } else {
+      prevEl.className = 'measure-prev';
+      prevEl.textContent = 'Primera medición';
+    }
+  });
+
+  renderMeasuresHistory();
+}
+
+function saveMeasures() {
+  const entry = { date: getTodayKey() };
+  let hasValue = false;
+
+  MEASURE_KEYS.forEach(key => {
+    const input = document.getElementById('m-' + key);
+    const val = input ? parseFloat(input.value) : null;
+    if (val && val > 0) { entry[key] = val; hasValue = true; }
+    else entry[key] = null;
+  });
+
+  if (!hasValue) {
+    showToast('Ingresa al menos una medida', 'error');
+    return;
+  }
+
+  // Replace today's entry if exists
+  APP.bodyMeasures = APP.bodyMeasures.filter(m => m.date !== getTodayKey());
+  APP.bodyMeasures.push(entry);
+  // Keep only last 52 (1 year weekly)
+  if (APP.bodyMeasures.length > 52) APP.bodyMeasures = APP.bodyMeasures.slice(-52);
+
+  saveToStorage();
+  showToast('📏 Medidas guardadas', 'success');
+
+  // Update settings button subtitle
+  updateMeasuresLastDate();
+  renderMeasuresModal();
+}
+
+function updateMeasuresLastDate() {
+  const el = document.getElementById('measures-last-date');
+  if (!el) return;
+  if (APP.bodyMeasures.length === 0) {
+    el.textContent = 'Sin medidas registradas';
+    return;
+  }
+  const last = APP.bodyMeasures[APP.bodyMeasures.length - 1];
+  const d = new Date(last.date + 'T12:00:00');
+  const vals = MEASURE_KEYS
+    .filter(k => last[k])
+    .map(k => `${MEASURE_LABELS[k]}: ${last[k]}${MEASURE_UNITS[k]}`)
+    .slice(0, 3).join(' · ');
+  el.textContent = `Última: ${formatDate(d)} · ${vals}`;
+}
+
+function renderMeasuresHistory() {
+  const container = document.getElementById('measures-history');
+  if (!container) return;
+
+  if (APP.bodyMeasures.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-family:var(--font-body);font-size:13px">Sin medidas registradas aún.<br>¡Registra tu primera medición!</div>';
+    return;
+  }
+
+  // Show last 8 entries, newest first
+  const entries = [...APP.bodyMeasures].reverse().slice(0, 8);
+  container.innerHTML = entries.map((entry, idx) => {
+    const nextEntry = entries[idx + 1]; // older entry for comparison
+    const d = new Date(entry.date + 'T12:00:00');
+    const dateStr = formatDate(d);
+
+    const itemsHTML = MEASURE_KEYS.filter(k => entry[k]).map(k => {
+      const unit  = MEASURE_UNITS[k];
+      const lowerB = MEASURE_LOWER_IS_BETTER[k];
+      let deltaHTML = '';
+      if (nextEntry && nextEntry[k]) {
+        const delta   = entry[k] - nextEntry[k];
+        const improved = lowerB ? delta < 0 : delta > 0;
+        if (Math.abs(delta) >= 0.1) {
+          const sign = delta > 0 ? '+' : '';
+          const cls  = delta === 0 ? 'same' : improved ? 'down' : 'up';
+          const arrow = improved ? '↓' : '↑';
+          deltaHTML = `<div class="mhe-delta ${cls}">${arrow}${sign}${Math.abs(delta).toFixed(1)}</div>`;
+        }
+      }
+      return `<div class="mhe-item">
+        <div class="mhe-val">${entry[k]}</div>
+        <div class="mhe-lbl">${MEASURE_LABELS[k]}</div>
+        ${deltaHTML}
+      </div>`;
+    }).join('');
+
+    return `<div class="measure-history-entry">
+      <div class="mhe-date">${dateStr}</div>
+      <div class="mhe-grid">${itemsHTML}</div>
+    </div>`;
+  }).join('');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1822,10 +2067,35 @@ function bindEvents() {
   // ── Complete routine button ──
   document.getElementById('btn-complete-routine').addEventListener('click', completeRoutine);
 
+  // ── Measures modal ──
+  document.getElementById('btn-open-measures')?.addEventListener('click', openMeasuresModal);
+  document.getElementById('btn-open-measures-cfg')?.addEventListener('click', openMeasuresModal);
+  document.getElementById('measures-modal-close')?.addEventListener('click', closeMeasuresModal);
+  document.getElementById('btn-save-measures')?.addEventListener('click', saveMeasures);
+  // Close on overlay click
+  document.getElementById('measures-modal')?.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('measures-modal')) closeMeasuresModal();
+  });
+
   // ── Timer modal ──
   document.getElementById('modal-btn-start').addEventListener('click', startTimer);
   document.getElementById('modal-btn-reset').addEventListener('click', resetTimer);
   document.getElementById('modal-btn-complete-set').addEventListener('click', completeSet);
+
+  // Weight controls in timer modal
+  document.getElementById('modal-weight-minus').addEventListener('click', () => {
+    const inp = document.getElementById('modal-weight-input');
+    const v = parseFloat(inp.value) || 0;
+    inp.value = v >= 0.5 ? Math.round((v - 0.5) * 2) / 2 : '';
+    _saveModalWeight();
+  });
+  document.getElementById('modal-weight-plus').addEventListener('click', () => {
+    const inp = document.getElementById('modal-weight-input');
+    const v = parseFloat(inp.value) || 0;
+    inp.value = Math.round((v + 0.5) * 2) / 2;
+    _saveModalWeight();
+  });
+  document.getElementById('modal-weight-input').addEventListener('change', _saveModalWeight);
   // Botón de descanso: en rest_done actúa como "Completar descanso"
   document.getElementById('modal-btn-rest').addEventListener('click', () => {
     completeRest();
