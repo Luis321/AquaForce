@@ -3,7 +3,7 @@
 // Offline-first strategy: Cache-then-network for assets
 // ============================================================
 
-const CACHE_NAME = 'aquaforce-v1.0';
+const CACHE_NAME = 'aquaforce-v1.4';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
