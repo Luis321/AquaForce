@@ -387,6 +387,18 @@ function createSchema() {
   saveDB();
 }
 
+function normalizeSession(s) {
+  return {
+    ...s,
+    session_type:         s.session_type         ?? s.type        ?? '',
+    duration_min:         s.duration_min         ?? s.duration    ?? 0,
+    series_completed:     s.series_completed     ?? s.series      ?? 0,
+    exercises_completed:  s.exercises_completed  ?? s.exDone      ?? 0,
+    exercises_total:      s.exercises_total      ?? s.exTotal     ?? 0,
+    routine_name:         s.routine_name         || s.routineName || ''
+  };
+}
+
 const DB = {
   saveSession(s) {
     if (APP.db) {
@@ -418,7 +430,7 @@ const DB = {
       const cols = rows[0].columns;
       return rows[0].values.map(r => Object.fromEntries(cols.map((c,i) => [c,r[i]])));
     }
-    return APP.sessions.filter(s => s.date === date);
+    return APP.sessions.filter(s => s.date === date).map(normalizeSession);
   },
 
   getRecentSessions(n = 14) {
@@ -430,7 +442,7 @@ const DB = {
       const cols = rows[0].columns;
       return rows[0].values.map(r => Object.fromEntries(cols.map((c,i) => [c,r[i]])));
     }
-    return [...APP.sessions].sort((a,b) => b.date.localeCompare(a.date)).slice(0, n);
+    return [...APP.sessions].sort((a,b) => b.date.localeCompare(a.date)).slice(0, n).map(normalizeSession);
   },
 
   saveWeight(exId, kg) {
