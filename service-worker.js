@@ -1,58 +1,41 @@
-// ============================================================
-// AquaForce Training - Service Worker v1.0
-// Offline-first strategy: Cache-then-network for assets
-// ============================================================
-
-const CACHE_NAME = 'aquaforce-v1.4';
-const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './styles.css',
-  './app.js',
-  './manifest.json'
+// AquaForce Training v2 — Service Worker
+const CACHE = 'aquaforce-v2.1';
+const ASSETS = [
+  './', './index.html', './styles.css', './app.js', './manifest.json',
+  'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.wasm',
+  'https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800;900&family=Barlow:wght@300;400;500;600&family=Rajdhani:wght@400;500;600;700&display=swap'
 ];
 
-// ── INSTALL: precache assets ──────────────────────────────
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Caching app shell');
-      return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE)
+      .then(c => c.addAll(ASSETS.filter(u => u.startsWith('.'))))
+      .then(() => self.skipWaiting())
   );
 });
 
-// ── ACTIVATE: clean old caches ────────────────────────────
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
-      );
-    }).then(() => self.clients.claim())
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
-// ── FETCH: cache-first strategy ───────────────────────────
-self.addEventListener('fetch', (event) => {
-  // Skip non-GET requests
-  if (event.request.method !== 'GET') return;
-
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
+self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+  e.respondWith(
+    caches.match(e.request).then(cached => {
       if (cached) return cached;
-      return fetch(event.request).then((response) => {
-        // Cache successful responses
-        if (response && response.status === 200 && response.type === 'basic') {
-          const cloned = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, cloned));
+      return fetch(e.request).then(res => {
+        if (res && res.status === 200) {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
         }
-        return response;
+        return res;
       }).catch(() => {
-        // Offline fallback: return index.html for navigation
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
+        if (e.request.mode === 'navigate') return caches.match('./index.html');
       });
     })
   );
