@@ -1,536 +1,587 @@
-/* ============================================================
-   AquaForce Training - app.js v1.0
-   Fuerza + control + agua
-   Modular vanilla JS PWA
-   ============================================================ */
-
+/* ================================================================
+   AquaForce Training v2 — app.js
+   AM/PM sessions · Gym · Pierna Hipertrofia · Meal Plan · SQLite
+   ================================================================ */
 'use strict';
 
-// ═══════════════════════════════════════════════════════════
-// 1. DATA: RUTINAS SEMANALES
-// ═══════════════════════════════════════════════════════════
-
-const WEEKLY_ROUTINES = {
+// ════════════════════════════════════════════════════════════════
+// 1. DAILY SCHEDULE — AM + PM por día
+// ════════════════════════════════════════════════════════════════
+const DAILY_SCHEDULE = {
   0: { // Domingo
-    name: 'Aguas Abiertas',
-    focus: 'Adaptación + técnica en agua',
-    tags: ['natacion', 'recovery'],
-    duration: '45-90 min',
-    goal: 'Adaptar al medio, mejorar técnica de patada y orientación en aguas abiertas',
-    coach: 'Hoy es tu día en el agua. Enfócate en la técnica, no en la velocidad. El agua te enseña más que cualquier rutina en tierra.',
-    load: 'moderada',
-    tip: 'Revisa el equipo: gorra, gafas, boya. Hidrátate bien antes.',
-    isSunday: true,
-    exercises: [
-      { id: 'warmup-swim', name: 'Entrada al agua / Calentamiento', sets: 1, reps: null, duration: '5 min', rest: 60, note: 'Entrar despacio, aclimatarse a la temperatura.' },
-      { id: 'kick-drill', name: 'Drill de patada', sets: 3, reps: null, duration: '50m', rest: 90, note: 'Solo piernas, tabla si tienes. Foco en la cadera, no solo en los pies.' },
-      { id: 'orientation', name: 'Orientación en agua abierta', sets: 2, reps: null, duration: '100m', rest: 120, note: 'Levanta la cabeza cada 6-8 brazadas. Elige un punto de referencia lejano.' },
-      { id: 'open-swim', name: 'Nado continuo libre', sets: 1, reps: null, duration: '20-40 min', rest: 0, note: 'Ritmo cómodo. Escucha tu cuerpo. Disfruta el entorno.' },
-      { id: 'cooldown-swim', name: 'Vuelta a la calma', sets: 1, reps: null, duration: '5 min', rest: 0, note: 'Nado suave, respiración lenta. Estira en el borde o en tierra.' }
-    ]
+    label: 'Domingo',
+    am: {
+      name: 'Aguas Abiertas',
+      type: 'swim', location: 'OW',
+      focus: 'Técnica · Patada · Orientación · Control',
+      tags: ['natacion','recovery'], duration: '45–90 min', load: 'moderada',
+      coach: 'Hoy el agua te enseña más que cualquier rutina en tierra. Foco en técnica, no en velocidad.',
+      isSunday: true,
+      exercises: [
+        {id:'warmup-sw',   name:'Entrada al agua / Calentamiento', sets:1, reps:null, duration:'5 min',   rest:60,  note:'Aclimatarse a la temperatura. Movimientos suaves.'},
+        {id:'kick-drill',  name:'Drill de patada',                  sets:3, reps:null, duration:'50 m',    rest:90,  note:'Solo piernas, tabla si tienes. Foco en la cadera, no solo pies.'},
+        {id:'orientation', name:'Orientación en agua abierta',      sets:2, reps:null, duration:'100 m',   rest:120, note:'Levanta la cabeza cada 6–8 brazadas. Elige un punto de referencia.'},
+        {id:'open-swim',   name:'Nado continuo libre',              sets:1, reps:null, duration:'20–40 min',rest:0,  note:'Ritmo cómodo. Escucha tu cuerpo.'},
+        {id:'cooldown-sw', name:'Vuelta a la calma',                sets:1, reps:null, duration:'5 min',   rest:0,  note:'Nado suave, respiración lenta. Estira en tierra.'}
+      ]
+    },
+    pm: null
   },
   1: { // Lunes
-    name: 'Pierna + Core',
-    focus: 'Fuerza de piernas para la patada + core profundo',
-    tags: ['pierna', 'core', 'natacion'],
-    duration: '25 min',
-    goal: 'Fortalecer piernas para la patada en natación y activar core profundo',
-    coach: 'Hoy toca pierna fuerte. Cada sentadilla, cada zancada te acerca a una patada más potente en el agua.',
-    load: 'moderada',
-    tip: 'Duerme al menos 7h. Tu musculatura se recupera de noche.',
-    exercises: [
-      { id: 'gato-vaca', name: 'Gato-Vaca', sets: 2, reps: 10, duration: null, rest: 30, note: 'Movilidad de columna. Inhala al bajar, exhala al subir.' },
-      { id: 'kegel', name: 'Kegel', sets: 1, reps: 15, duration: null, rest: 20, note: 'Activa el suelo pélvico. Imprescindible para el core profundo.' },
-      { id: 'flow-lunes', name: 'Flow: side kick + crawl + hip twist + push-up', sets: 2, reps: 5, duration: null, rest: 45, note: 'Movimiento fluido. No pares entre los 4 elementos.' },
-      { id: 'zancada-trasera', name: 'Zancada trasera con barra', sets: 3, reps: 10, duration: null, rest: 60, note: 'Rodilla trasera toca el suelo suavemente. Torso erecto.' },
-      { id: 'sentadilla', name: 'Sentadilla', sets: 3, reps: 12, duration: null, rest: 60, note: 'Pies a ancho de hombros. Rodillas siguen la línea de los pies.' },
-      { id: 'flutter-kicks', name: 'Flutter kicks', sets: 3, reps: null, duration: '30 seg', rest: 45, note: 'Como en la piscina pero en el suelo. Cadera plana, pies juntos.' },
-      { id: 'barra-pull', name: 'Barra: dominadas o colgarse', sets: 2, reps: 5, duration: null, rest: 60, note: 'Si no llegas, solo cuélgate 20 seg para descomprimir la columna.' }
-    ]
+    label: 'Lunes',
+    am: {
+      name: 'Pierna Hipertrofia',
+      type: 'home', location: 'Casa',
+      focus: 'Fuerza de piernas para patada + volumen muscular',
+      tags: ['pierna','core','natacion'], duration: '45 min', load: 'alta',
+      coach: 'El día más importante de la semana. Cada rep de sentadilla se convierte en potencia en el agua.',
+      exercises: [
+        {id:'gato-vaca',    name:'Gato-Vaca',                       sets:2, reps:10,  duration:null,  rest:30,  note:'Activa la columna. Inhala al bajar, exhala al subir.'},
+        {id:'kegel',        name:'Kegel',                           sets:1, reps:12,  duration:null,  rest:20,  note:'Core profundo antes de las cargas pesadas.'},
+        {id:'flow-am',      name:'Flow: side kick + crawl + hip twist + push-up', sets:2, reps:5, duration:null, rest:45, note:'Activación completa. Fluido, sin pausas entre los 4 movimientos.'},
+        {id:'sentadilla',   name:'Sentadilla con barra',            sets:4, reps:8,   duration:null,  rest:90,  note:'Tempo 3-1-1. Baja en 3 seg, pausa 1 seg, sube 1 seg. Rodillas siguen pies.', tempo:'3-1-1', isMain:true},
+        {id:'zancada-b',    name:'Zancada trasera con barra',       sets:4, reps:10,  duration:null,  rest:75,  note:'10 reps por pierna. Rodilla trasera toca suelo. Torso erecto.', isMain:true},
+        {id:'step-up',      name:'Step-up con mancuernas',          sets:3, reps:12,  duration:null,  rest:60,  note:'12 reps por pierna. Empuja desde el pie de arriba. Sin impulso abajo.', isMain:true},
+        {id:'sq-sumo',      name:'Sentadilla sumo con mancuerna',   sets:3, reps:15,  duration:null,  rest:60,  note:'Pies más abiertos. Activa aductores y glúteo.'},
+        {id:'rdl',          name:'Peso muerto rumano con barra',    sets:3, reps:10,  duration:null,  rest:75,  note:'Cadera atrás, espalda recta. Sientes el estiramiento en isquiotibiales.'},
+        {id:'hip-bridge',   name:'Puente de glúteo con barra',      sets:3, reps:12,  duration:null,  rest:60,  note:'Apoya la barra sobre las caderas con toalla. Contrae glúteo arriba.'},
+        {id:'flutter',      name:'Flutter kicks',                   sets:3, reps:null, duration:'40s', rest:45, note:'Simula la patada de crol. Espalda baja pegada al suelo.'}
+      ]
+    },
+    pm: null, pmNote: '📚 Clases 7–11pm'
   },
   2: { // Martes
-    name: 'Funcional + Torso',
-    focus: 'Estabilidad de hombros + control motor',
-    tags: ['funcional', 'estabilidad', 'barra'],
-    duration: '22 min',
-    goal: 'Mejorar estabilidad de hombros y transferir control al agua',
-    coach: 'Hoy es funcional. No es mucho peso, es mucho control. La calidad de movimiento define tu progreso real.',
-    load: 'suave',
-    tip: 'Hidratarte hoy facilita el rendimiento de mañana.',
-    exercises: [
-      { id: 'gato-vaca', name: 'Gato-Vaca', sets: 2, reps: 8, duration: null, rest: 30, note: 'Movilización matutina de columna.' },
-      { id: 'kegel', name: 'Kegel', sets: 1, reps: 10, duration: null, rest: 20, note: 'Activa el suelo pélvico antes de empezar.' },
-      { id: 'flow-martes', name: 'Flow: side kick + crawl + hip twist + push-up', sets: 2, reps: 5, duration: null, rest: 45, note: 'Ritmo fluido. Conecta el movimiento con la respiración.' },
-      { id: 'halo', name: 'Lateral swing to halo con mancuerna', sets: 3, reps: 10, duration: null, rest: 45, note: 'Movimiento lento y controlado. Activa serrato y deltoides.' },
-      { id: 'plank-shoulder', name: 'Plank shoulder taps', sets: 3, reps: 12, duration: null, rest: 45, note: 'Cadera firme. No rotes el torso al levantar la mano.' },
-      { id: 'serrato-barra', name: 'Serrato en barra', sets: 3, reps: 8, duration: null, rest: 60, note: 'Protracción de escápulas al final del movimiento. Clave para la brazada.' },
-      { id: 'push-up-barra', name: 'Push-up en barra', sets: 2, reps: 8, duration: null, rest: 60, note: 'Bajada lenta, 3 segundos. Codos a 45°.' }
-    ]
+    label: 'Martes',
+    am: {
+      name: 'Funcional + Torso',
+      type: 'home', location: 'Casa',
+      focus: 'Estabilidad de hombros · Control motor · Transferencia al agua',
+      tags: ['funcional','estabilidad','barra','natacion'], duration: '22 min', load: 'suave',
+      coach: 'Hoy es calidad, no cantidad. El serrato que trabajas hoy se transfiere directo al press militar del gym esta tarde.',
+      exercises: [
+        {id:'gato-vaca',    name:'Gato-Vaca',                       sets:2, reps:8,   duration:null,  rest:30, note:'Movilización matutina de columna.'},
+        {id:'kegel',        name:'Kegel',                           sets:1, reps:10,  duration:null,  rest:20, note:'Activa el suelo pélvico antes de empezar.'},
+        {id:'flow-am',      name:'Flow completo',                   sets:2, reps:5,   duration:null,  rest:45, note:'Ritmo fluido. Conecta con la respiración.'},
+        {id:'halo',         name:'Halo con mancuerna',              sets:3, reps:10,  duration:null,  rest:45, note:'Movimiento lento y controlado. Activa serrato y deltoides.'},
+        {id:'plank-sh',     name:'Plank shoulder taps',             sets:3, reps:12,  duration:null,  rest:45, note:'Cadera firme. No rotes el torso al levantar la mano.'},
+        {id:'serrato-b',    name:'Serrato en barra',                sets:3, reps:8,   duration:null,  rest:60, note:'Protracción de escápulas al final. Clave para la brazada.'},
+        {id:'pushup-b',     name:'Push-up en barra',                sets:2, reps:8,   duration:null,  rest:60, note:'Bajada lenta 3 seg. Codos a 45°. Protracción al subir.'}
+      ]
+    },
+    pm: {
+      name: 'Gym — Empuje + Hombros',
+      type: 'gym', location: 'Gym',
+      focus: 'Volumen en hombros y pecho · Física de playa',
+      tags: ['gym','estabilidad'], duration: '50 min', load: 'alta',
+      coach: 'Tarde de gym. Empuje pesado. Hombros anchos son lo que más se nota sin camiseta.',
+      exercises: [
+        {id:'press-banca',  name:'Press banca con barra',           sets:4, reps:8,   duration:null,  rest:75, note:'Codos a 45°. Toca el pecho. Explota al subir.', isMain:true},
+        {id:'press-mil',    name:'Press militar',                   sets:3, reps:10,  duration:null,  rest:60, note:'De pie o sentado. Barra pasa por delante de la cara. Core activo.', isMain:true},
+        {id:'elev-lat',     name:'Elevaciones laterales',           sets:3, reps:15,  duration:null,  rest:45, note:'Pesos moderados. Codos levemente flexionados. Sin impulso.'},
+        {id:'fondos',       name:'Fondos en paralelas',             sets:3, reps:10,  duration:null,  rest:60, note:'Inclínate ligeramente adelante para activar más pecho.'},
+        {id:'face-pull',    name:'Face pull en polea',              sets:3, reps:15,  duration:null,  rest:45, note:'Polea alta, jala hacia la cara. Protege los hombros.'}
+      ]
+    }
   },
   3: { // Miércoles
-    name: 'Recuperación Activa',
-    focus: 'Movilidad + core suave',
-    tags: ['recovery', 'core', 'estabilidad'],
-    duration: '18 min',
-    goal: 'Recuperar sin perder el hábito. Movilidad + core ligero.',
-    coach: 'Hoy es recovery. No es día off, es día de escuchar al cuerpo. Esta sesión es lo que separa a los atletas de los aficionados.',
-    load: 'suave',
-    tip: 'Come bien hoy: proteína y verduras. Prepara el cuerpo para el jueves.',
-    exercises: [
-      { id: 'gato-vaca', name: 'Gato-Vaca', sets: 3, reps: 10, duration: null, rest: 20, note: 'Más series hoy, foco en movilidad y respiración.' },
-      { id: 'kegel', name: 'Kegel', sets: 2, reps: 15, duration: null, rest: 20, note: 'Control consciente del suelo pélvico.' },
-      { id: 'flow-suave', name: 'Flow suave: movilidad completa', sets: 2, reps: 4, duration: null, rest: 30, note: 'Sin prisa. Cada transición es parte del entrenamiento.' },
-      { id: 'plank-light', name: 'Plancha ligera', sets: 2, reps: null, duration: '20 seg', rest: 40, note: 'No forzar. Solo activar.' },
-      { id: 'serrato-suave', name: 'Serrato suave en barra', sets: 2, reps: 6, duration: null, rest: 45, note: 'Sin carga, solo movimiento de escápulas.' },
-      { id: 'flutter-suave', name: 'Flutter kicks suave', sets: 2, reps: null, duration: '20 seg', rest: 40, note: 'Velocidad baja. Solo activar caderas.' }
-    ]
+    label: 'Miércoles',
+    am: {
+      name: 'Recovery Activo',
+      type: 'home', location: 'Casa',
+      focus: 'Movilidad · Core suave · Recuperación sin perder el hábito',
+      tags: ['recovery','core','estabilidad'], duration: '18 min', load: 'suave',
+      coach: 'Hoy no es día off — es día de escuchar al cuerpo. Esta sesión es lo que separa a los atletas de los aficionados.',
+      exercises: [
+        {id:'gato-vaca',    name:'Gato-Vaca',                       sets:3, reps:10,  duration:null,   rest:20, note:'Más series hoy. Foco en movilidad y respiración.'},
+        {id:'kegel',        name:'Kegel',                           sets:2, reps:15,  duration:null,   rest:20, note:'Control consciente del suelo pélvico.'},
+        {id:'flow-suave',   name:'Flow suave',                      sets:2, reps:4,   duration:null,   rest:30, note:'Sin explosividad. Movimiento fluido y consciente.'},
+        {id:'plank-light',  name:'Plancha ligera',                  sets:2, reps:null, duration:'20s', rest:40, note:'No forzar. Solo activar.'},
+        {id:'serrato-s',    name:'Serrato suave en barra',          sets:2, reps:6,   duration:null,   rest:45, note:'Sin carga, solo movimiento de escápulas.'},
+        {id:'flutter-s',    name:'Flutter kicks suave',             sets:2, reps:null, duration:'20s', rest:40, note:'Solo para activar caderas. No hay fatiga.'}
+      ]
+    },
+    pm: null, pmNote: '✅ Descanso — el cuerpo recupera el martes doble'
   },
   4: { // Jueves
-    name: 'Pierna Fuerte + Patada',
-    focus: 'Máxima fuerza de piernas para la propulsión',
-    tags: ['pierna', 'core', 'natacion', 'barra'],
-    duration: '28 min',
-    goal: 'Sesión de pierna más intensa de la semana. Transferencia directa a la patada.',
-    coach: 'Hoy toca pierna fuerte. El jueves es el día donde construyes la base de tu patada. No te lo saltes.',
-    load: 'alta',
-    tip: 'Aliméntate bien antes. Un plátano o avena 30 min antes te dará energía sostenida.',
-    exercises: [
-      { id: 'gato-vaca', name: 'Gato-Vaca', sets: 2, reps: 10, duration: null, rest: 30, note: 'Activa la columna antes del trabajo fuerte.' },
-      { id: 'kegel', name: 'Kegel', sets: 1, reps: 12, duration: null, rest: 20, note: 'Core profundo antes de las cargas.' },
-      { id: 'flow-jueves', name: 'Flow: side kick + crawl + hip twist + push-up', sets: 3, reps: 5, duration: null, rest: 45, note: 'Hoy 3 series del flow. Prepara todo el cuerpo.' },
-      { id: 'zancada-trasera', name: 'Zancada trasera con barra (carga)', sets: 4, reps: 10, duration: null, rest: 75, note: 'Más sets que el lunes. Añade carga si puedes.' },
-      { id: 'sentadilla', name: 'Sentadilla profunda', sets: 4, reps: 12, duration: null, rest: 75, note: 'Baja al máximo rango. La profundidad activa glúteos y cadena posterior.' },
-      { id: 'step-up', name: 'Step-up (banco o silla)', sets: 3, reps: 10, duration: null, rest: 60, note: 'Alternando piernas. Rodilla sube a 90°. El step-up imita la patada.' },
-      { id: 'flutter-kicks', name: 'Flutter kicks', sets: 4, reps: null, duration: '35 seg', rest: 45, note: 'El núcleo del día. Simula la patada de crol.' },
-      { id: 'barra-pull', name: 'Barra: dominadas / colgarse / pull-up asistido', sets: 3, reps: 6, duration: null, rest: 60, note: 'Termina con tracción. La cadena posterior completa el ciclo.' }
-    ]
+    label: 'Jueves',
+    am: {
+      name: 'Pierna Hipertrofia',
+      type: 'home', location: 'Casa',
+      focus: 'Segunda sesión de pierna · Progresión de carga semanal',
+      tags: ['pierna','core','natacion'], duration: '45 min', load: 'alta',
+      coach: 'Segunda pierna de la semana. Si el lunes fue bueno, hoy sube 2.5 kg en sentadilla.',
+      exercises: [
+        {id:'gato-vaca',    name:'Gato-Vaca',                       sets:2, reps:10,  duration:null,  rest:30,  note:'Activa la columna antes del trabajo fuerte.'},
+        {id:'kegel',        name:'Kegel',                           sets:1, reps:12,  duration:null,  rest:20,  note:'Core profundo antes de las cargas.'},
+        {id:'flow-am',      name:'Flow completo',                   sets:3, reps:5,   duration:null,  rest:45,  note:'3 rondas hoy. Prepara todo el cuerpo.'},
+        {id:'sentadilla',   name:'Sentadilla con barra',            sets:4, reps:8,   duration:null,  rest:90,  note:'Mismo peso que lunes o +2.5 kg si completaste todas las reps.', tempo:'3-1-1', isMain:true},
+        {id:'zancada-b',    name:'Zancada trasera con barra',       sets:4, reps:10,  duration:null,  rest:75,  note:'10 reps por pierna. Controla la bajada.', isMain:true},
+        {id:'step-up',      name:'Step-up con mancuernas',          sets:3, reps:12,  duration:null,  rest:60,  note:'12 reps por pierna. Progresa en peso si puedes.', isMain:true},
+        {id:'sq-sumo',      name:'Sentadilla sumo',                 sets:3, reps:15,  duration:null,  rest:60,  note:'Aductores y glúteo. Peso moderado, recorrido completo.'},
+        {id:'rdl',          name:'Peso muerto rumano',              sets:3, reps:10,  duration:null,  rest:75,  note:'Isquiotibiales y cadena posterior. Espalda neutra.'},
+        {id:'hip-bridge',   name:'Puente de glúteo',                sets:3, reps:12,  duration:null,  rest:60,  note:'Contrae glúteo y mantén 1 seg arriba.'},
+        {id:'flutter',      name:'Flutter kicks',                   sets:3, reps:null, duration:'40s', rest:45, note:'Termina siempre con el patrón de patada.'}
+      ]
+    },
+    pm: null, pmNote: '📚 Clases 7–11pm'
   },
   5: { // Viernes
-    name: 'Funcional + Core + Barra',
-    focus: 'Control total: torso, core y barra',
-    tags: ['funcional', 'core', 'estabilidad', 'barra'],
-    duration: '30 min',
-    goal: 'Sesión completa de control: hombros, core, barra y coordinación',
-    coach: 'El viernes es tu sesión más completa. Halo, plancha, barra, flutter. Todo conectado. Cierra la semana fuerte.',
-    load: 'moderada',
-    tip: 'Mañana es recovery. Puedes dar el máximo hoy.',
-    exercises: [
-      { id: 'gato-vaca', name: 'Gato-Vaca', sets: 2, reps: 10, duration: null, rest: 30, note: 'Movilización de columna. Siempre el primer paso.' },
-      { id: 'kegel', name: 'Kegel', sets: 1, reps: 15, duration: null, rest: 20, note: 'Core profundo activo.' },
-      { id: 'flow-viernes', name: 'Flow completo: side kick + crawl + hip twist + push-up', sets: 3, reps: 5, duration: null, rest: 45, note: 'El flow más completo de la semana.' },
-      { id: 'halo', name: 'Lateral swing to halo con mancuerna', sets: 3, reps: 12, duration: null, rest: 45, note: 'Hoy más reps. Foco en hombros y serrato.' },
-      { id: 'plank-shoulder', name: 'Plank shoulder taps', sets: 3, reps: 16, duration: null, rest: 45, note: 'Estabilidad lumbar máxima.' },
-      { id: 'push-up-barra', name: 'Push-up en barra', sets: 3, reps: 10, duration: null, rest: 60, note: 'Bajada controlada. Foco en serrato anterior.' },
-      { id: 'elevacion-piernas', name: 'Elevaciones de piernas en barra', sets: 3, reps: 10, duration: null, rest: 60, note: 'Core + cadera. Imita el movimiento de patada en posición vertical.' },
-      { id: 'serrato-barra', name: 'Serrato en barra', sets: 3, reps: 10, duration: null, rest: 60, note: 'Escápulas activas. La clave de la brazada larga.' },
-      { id: 'flutter-kicks', name: 'Flutter kicks', sets: 3, reps: null, duration: '30 seg', rest: 45, note: 'Para cerrar la semana con el patrón de patada.' },
-      { id: 'biceps-opt', name: 'Bíceps o trapecio (opcional)', sets: 2, reps: 12, duration: null, rest: 60, note: 'Solo si la semana fue bien. No es obligatorio.' }
-    ]
+    label: 'Viernes',
+    am: {
+      name: 'Funcional + Core + Barra',
+      type: 'home', location: 'Casa',
+      focus: 'Control total · Hombros · Core · Barra',
+      tags: ['funcional','core','estabilidad','barra'], duration: '30 min', load: 'moderada',
+      coach: 'El viernes es tu sesión más completa. Cierra la semana fuerte — esta tarde hay gym.',
+      exercises: [
+        {id:'gato-vaca',    name:'Gato-Vaca',                       sets:2, reps:10,  duration:null,  rest:30, note:'Siempre el primer paso.'},
+        {id:'kegel',        name:'Kegel',                           sets:1, reps:15,  duration:null,  rest:20, note:'Core profundo activo.'},
+        {id:'flow-am',      name:'Flow completo',                   sets:3, reps:5,   duration:null,  rest:45, note:'El flow más completo de la semana.'},
+        {id:'halo',         name:'Halo con mancuerna',              sets:3, reps:12,  duration:null,  rest:45, note:'Hoy más reps. Foco en hombros y serrato.'},
+        {id:'plank-sh',     name:'Plank shoulder taps',             sets:3, reps:16,  duration:null,  rest:45, note:'Estabilidad lumbar máxima.'},
+        {id:'pushup-b',     name:'Push-up en barra',                sets:3, reps:10,  duration:null,  rest:60, note:'Bajada controlada. Protracción al final.'},
+        {id:'elev-piernas', name:'Elevaciones de piernas en barra', sets:3, reps:10,  duration:null,  rest:60, note:'Core + cadera. Imita la patada vertical.'},
+        {id:'serrato-b',    name:'Serrato en barra',                sets:3, reps:10,  duration:null,  rest:60, note:'Escápulas activas. Clave para la brazada larga.'},
+        {id:'flutter',      name:'Flutter kicks',                   sets:3, reps:null, duration:'30s', rest:45, note:'Cierra la semana con el patrón de patada.'},
+        {id:'biceps-opt',   name:'Bíceps o trapecio (opcional)',    sets:2, reps:12,  duration:null,  rest:60, note:'Solo si la semana fue bien. No es obligatorio.'}
+      ]
+    },
+    pm: {
+      name: 'Gym — Espalda + Tracción',
+      type: 'gym', location: 'Gym',
+      focus: 'Forma en V · Espalda ancha · Bíceps',
+      tags: ['gym','barra'], duration: '50 min', load: 'alta',
+      coach: 'Jalón, remo, dominadas. La espalda en V es lo que define el cuerpo de un nadador.',
+      exercises: [
+        {id:'jalon',        name:'Jalón al pecho agarre ancho',     sets:4, reps:10,  duration:null,  rest:75, note:'Agarre más ancho que hombros. Baja a la clavícula. Escápulas abajo.', isMain:true},
+        {id:'remo-pol',     name:'Remo en polea sentado',           sets:3, reps:12,  duration:null,  rest:60, note:'Jala hacia el ombligo. Mantén la espalda erguida.', isMain:true},
+        {id:'dominadas',    name:'Dominadas asistidas o libres',    sets:3, reps:8,   duration:null,  rest:75, note:'Si no llegas a 8 libres, usa la máquina de asistencia.', isMain:true},
+        {id:'curl-alt',     name:'Curl bíceps alterno',             sets:3, reps:12,  duration:null,  rest:45, note:'Supinación completa al subir. Codo fijo.'},
+        {id:'shrug',        name:'Encogimientos de trapecio',       sets:2, reps:15,  duration:null,  rest:45, note:'Sube los hombros directo hacia las orejas. Sin rotar.'}
+      ]
+    }
   },
   6: { // Sábado
-    name: 'Activación Suave / Recovery',
-    focus: 'Movilidad + activación ligera',
-    tags: ['recovery', 'estabilidad'],
-    duration: '15 min',
-    goal: 'Mantener el hábito sin acumular fatiga. Preparar el cuerpo para el domingo en el agua.',
-    coach: 'Sábado es para moverte sin esforzarte. Esta sesión te mantiene activo y te prepara para mañana en el agua.',
-    load: 'suave',
-    tip: 'Duerme bien esta noche. Mañana es aguas abiertas.',
-    exercises: [
-      { id: 'gato-vaca', name: 'Gato-Vaca', sets: 3, reps: 10, duration: null, rest: 20, note: 'El más importante del día. Abre la columna.' },
-      { id: 'kegel', name: 'Kegel', sets: 2, reps: 12, duration: null, rest: 20, note: 'Core profundo, incluso en días suaves.' },
-      { id: 'flow-sabado', name: 'Flow suave', sets: 2, reps: 4, duration: null, rest: 30, note: 'Sin explosividad. Movimiento fluido y consciente.' },
-      { id: 'plank-light', name: 'Plancha ligera', sets: 2, reps: null, duration: '20 seg', rest: 30, note: 'Activa sin fatigar.' },
-      { id: 'serrato-suave', name: 'Serrato suave', sets: 2, reps: 6, duration: null, rest: 30, note: 'Recuerda la protracción de escápulas para mañana.' },
-      { id: 'flutter-suave', name: 'Flutter kicks suave', sets: 2, reps: null, duration: '15 seg', rest: 30, note: 'Solo para recordar el patrón antes de nadar mañana.' }
-    ]
+    label: 'Sábado',
+    am: {
+      name: 'Activación Suave',
+      type: 'home', location: 'Casa',
+      focus: 'Movilidad + activación ligera · Prepara para mañana en el agua',
+      tags: ['recovery','estabilidad'], duration: '15 min', load: 'suave',
+      coach: 'Sábado es para moverte sin esforzarte. Esta sesión te mantiene activo y te prepara para el domingo en el agua.',
+      exercises: [
+        {id:'gato-vaca',    name:'Gato-Vaca',                       sets:3, reps:10,  duration:null,   rest:20, note:'El más importante del día. Abre la columna.'},
+        {id:'kegel',        name:'Kegel',                           sets:2, reps:12,  duration:null,   rest:20, note:'Core profundo, incluso en días suaves.'},
+        {id:'flow-suave',   name:'Flow suave',                      sets:2, reps:4,   duration:null,   rest:30, note:'Sin explosividad. Movimiento fluido y consciente.'},
+        {id:'plank-light',  name:'Plancha ligera',                  sets:2, reps:null, duration:'20s', rest:30, note:'Activa sin fatigar.'},
+        {id:'serrato-s',    name:'Serrato suave',                   sets:2, reps:6,   duration:null,   rest:30, note:'Recuerda la protracción para mañana en el agua.'},
+        {id:'flutter-s',    name:'Flutter kicks suave',             sets:2, reps:null, duration:'15s', rest:30, note:'Solo para recordar el patrón antes de nadar mañana.'}
+      ]
+    },
+    pm: null, pmNote: '📚 Clases 2–6pm'
   }
 };
 
-// ═══════════════════════════════════════════════════════════
-// 2. DATA: BIBLIOTECA DE EJERCICIOS
-// ═══════════════════════════════════════════════════════════
-
-const EXERCISE_LIBRARY = [
-  {
-    id: 'gato-vaca',
-    name: 'Gato-Vaca',
-    categories: ['recovery', 'core'],
-    objetivo: 'Movilizar la columna vertebral, activar el core profundo y la respiración diafragmática.',
-    musculos: 'Erectores espinales, multífidos, transverso abdominal',
-    tecnica: 'En cuadrupedia, alterna entre flexión completa de columna (gato: espalda redonda, cabeza abajo) y extensión (vaca: lordosis, mirada al frente). Coordina con la respiración.',
-    errores: 'Moverse solo en la zona lumbar, olvidar la cervical, no sincronizar con la respiración.',
-    dificultad: 1,
-    variantes: {
-      facil: 'Solo el movimiento de cadera, sin mover la zona cervical.',
-      media: 'Versión completa con pausa de 2 seg en cada extremo.',
-      avanzado: 'Con carga pequeña en la espalda para mayor conciencia corporal.'
-    },
-    natacion: 'Activa la ondulación de cadera que se transfiere al nado de mariposa y a la posición de crol.'
+// ════════════════════════════════════════════════════════════════
+// 2. MEAL PLAN DIARIO (del Excel)
+// ════════════════════════════════════════════════════════════════
+const MEAL_PLAN = {
+  1: { // Lunes — Pierna hipertrofia
+    kcal: 1650, type: 'pierna',
+    whey: ['post_am'],
+    whey_note: '1 scoop con agua — inmediatamente post-pierna AM',
+    adjustment: '+1 plátano pre-entreno · +30g avena extra en desayuno',
+    desayuno: '🥞 Panqueque de avena (3 cdas avena + 3 claras + ½ plátano + 1½ cdta mantequilla de maní + 1 cda linaza molida) + 150 ml kéfir\n+ 1 plátano extra PRE-ENTRENO · +30g avena',
+    almuerzo: '150 g pollo + 1 papa + ensalada brócoli + 1 cdta aceite + 6 aceitunas',
+    snack: '1 manzana + 10 almendras',
+    cena: '🥞 Panqueque (3 claras + avena + 1 cda mantequilla de maní + 1 cdta semillas de girasol)',
+    prot: 170
   },
-  {
-    id: 'kegel',
-    name: 'Kegel',
-    categories: ['core', 'estabilidad'],
-    objetivo: 'Activar el suelo pélvico como base del core profundo para estabilizar la columna.',
-    musculos: 'Suelo pélvico, transverso abdominal, multífidos',
-    tecnica: 'Contrae el suelo pélvico (como si cortaras el flujo de orina), mantén 5-10 seg, libera. Respira con normalidad durante la contracción.',
-    errores: 'Aguantar la respiración, contraer glúteos o muslos en lugar del suelo pélvico, hacer el movimiento rápido sin control.',
-    dificultad: 1,
-    variantes: {
-      facil: 'Contracciones rápidas sin mantener (5 reps).',
-      media: 'Contracción sostenida 8-10 seg (10-15 reps).',
-      avanzado: 'Combinado con respiración de Pilates y plank.'
-    },
-    natacion: 'La estabilidad central reduce la resistencia hidrodinámica y mejora la posición horizontal en el agua.'
+  2: { // Martes — Doble sesión
+    kcal: 1700, type: 'doble',
+    whey: ['post_am', 'post_pm'],
+    whey_note: '2 scoops hoy: post AM (casa) y post PM (gym)',
+    adjustment: '+yogurt griego post-gym · +½ plátano post-AM',
+    desayuno: '🥣 Avena cocida + ¾ tz arándanos + 1½ cdta mantequilla de maní + 1 cdta chía + 1 cda linaza molida + 150 ml kéfir + 3 claras',
+    almuerzo: '150 g pollo a la plancha + ½ tz quinua + ensalada cocida + 1 cdta aceite',
+    snack: '½ plátano + 10 maníes',
+    cena: '2 huevos sancochados + ½ tz zapallito + 20 g palta + 1 cdta semillas de girasol\n+ Yogurt griego 170g POST-GYM',
+    prot: 175
   },
-  {
-    id: 'flow-lunes',
-    name: 'Flow: Side kick + Crawl + Hip twist + Push-up',
-    categories: ['funcional', 'core', 'estabilidad'],
-    objetivo: 'Activar el sistema nervioso, mejorar la coordinación motriz y calentar todo el cuerpo en un solo circuito de movimiento.',
-    musculos: 'Complejo glúteo, oblicuos, serrato, pectoral, hombros',
-    tecnica: 'Ejecuta los 4 movimientos en secuencia sin parar: patada lateral → posición de bear crawl → rotación de cadera → push-up. Un ciclo = 1 rep.',
-    errores: 'Apresurarse entre los movimientos, perder la alineación en el crawl, hacer el push-up con codos abiertos.',
-    dificultad: 2,
-    variantes: {
-      facil: 'Solo los primeros 2 elementos: side kick + crawl.',
-      media: 'Secuencia completa a ritmo moderado.',
-      avanzado: 'Añadir pausa de 1 seg en posición de crawl y en la bajada del push-up.'
-    },
-    natacion: 'La rotación de cadera y el trabajo de estabilidad lateral se transfieren directamente a la rotación de cuerpo en crol.'
+  3: { // Miércoles — Recovery
+    kcal: 1400, type: 'recovery',
+    whey: [],
+    whey_note: 'Sin whey hoy — día de recuperación',
+    adjustment: 'Plan base exacto. Reduce carbos en cena si no entrenaste fuerte.',
+    desayuno: '½ plátano + 3 claras + 30 g pollo + espinaca + 1 salmas + 30 g palta + 1 cdta chía + 100 ml kéfir + 1 cda semillas de girasol',
+    almuerzo: '150 g carne magra + 1 papa blanca + ensalada cocida + 1 cdta aceite + 6 aceitunas',
+    snack: '1 pera + 6 almendras',
+    cena: '🥞 Panqueque de avena (3 claras + ½ manzana + 1 cdta mantequilla de maní + 1 cdta linaza molida)',
+    prot: 160
   },
-  {
-    id: 'zancada-trasera',
-    name: 'Zancada trasera con barra',
-    categories: ['pierna', 'core'],
-    objetivo: 'Fortalecer cuádriceps, glúteos e isquiotibiales con énfasis en la estabilidad unilateral.',
-    musculos: 'Cuádriceps, glúteo mayor, isquiotibiales, core estabilizador',
-    tecnica: 'De pie con barra en trapecios, da un paso largo hacia atrás. La rodilla trasera baja hasta casi tocar el suelo. El torso permanece erecto. Vuelve al centro con el pie delantero.',
-    errores: 'Rodilla delantera pasa la punta del pie, tronco inclinado hacia adelante, paso muy corto.',
-    dificultad: 2,
-    variantes: {
-      facil: 'Sin barra, manos en la cadera.',
-      media: 'Con barra sin carga o mancuernas ligeras.',
-      avanzado: 'Con peso en barra o haciendo la versión con step para mayor rango.'
-    },
-    natacion: 'Fortalece la cadena posterior de la pierna, directamente implicada en la patada de crol.'
+  4: { // Jueves — Pierna hipertrofia
+    kcal: 1650, type: 'pierna',
+    whey: ['post_am'],
+    whey_note: '1 scoop con agua — post-pierna AM',
+    adjustment: '+1 plátano pre-entreno · +30g avena extra',
+    desayuno: '🥞 Panqueque de avena (3 claras + ½ manzana + 1½ cdta mantequilla de maní + 1 cdta chía + 1 cda semillas de girasol) + 150 ml kéfir + ½ tz fresas\n+ 1 plátano PRE-ENTRENO',
+    almuerzo: '150 g pollo deshilachado + 70 g fideos integrales + ensalada tomate/espinaca + 1 cdta aceite',
+    snack: '1 manzana + 10 maníes',
+    cena: '1 huevo sancochado + 1 salmas + ensalada verde + 25 g palta + 1 cdta linaza molida',
+    prot: 170
   },
-  {
-    id: 'sentadilla',
-    name: 'Sentadilla',
-    categories: ['pierna'],
-    objetivo: 'Desarrollar fuerza global de las piernas con énfasis en cuádriceps y glúteos.',
-    musculos: 'Cuádriceps, glúteo mayor, isquiotibiales, core, aductores',
-    tecnica: 'Pies a ancho de hombros o algo más. Baja como si fueras a sentarte: caderas atrás, rodillas siguen la dirección de los pies. Profundidad mínima: muslos paralelos al suelo.',
-    errores: 'Rodillas hacia adentro (valgo), talones se levantan, redondear la espalda, poca profundidad.',
-    dificultad: 2,
-    variantes: {
-      facil: 'Sentadilla asistida con silla o pared.',
-      media: 'Sentadilla libre con barra o mancuernas.',
-      avanzado: 'Sentadilla búlgara o pistol squat progresivo.'
-    },
-    natacion: 'Activa la cadena cinética completa de la pierna. Mejora la potencia de la patada y la posición de cadera en el agua.'
+  5: { // Viernes — Doble sesión
+    kcal: 1700, type: 'doble',
+    whey: ['post_am', 'post_pm'],
+    whey_note: '2 scoops: post AM (casa) y post PM (gym)',
+    adjustment: '+yogurt griego post-gym',
+    desayuno: '½ plátano + 3 claras + 30 g pollo + espinaca + 1 salmas + 30 g palta + 1 cdta chía + 150 ml kéfir + 1 cda semillas de girasol',
+    almuerzo: '150 g pollo a la plancha + ½ tz arroz integral + ensalada brócoli + 1 cdta aceite + 6 aceitunas',
+    snack: '1 manzana + 8 almendras',
+    cena: '🥞 Panqueque (3 claras + avena + 1 cda mantequilla de maní + 1 cdta linaza molida)\n+ Yogurt griego 170g POST-GYM',
+    prot: 175
   },
-  {
-    id: 'step-up',
-    name: 'Step-up (banco o silla)',
-    categories: ['pierna', 'estabilidad'],
-    objetivo: 'Fuerza unilateral de pierna, equilibrio y control de la cadera.',
-    musculos: 'Cuádriceps, glúteos, isquiotibiales, tibial anterior',
-    tecnica: 'Coloca un pie sobre el banco o silla. Empuja desde ese pie para subir, sin impulso del pie de abajo. El torso permanece erecto.',
-    errores: 'Usar el pie de abajo como rebote, rodilla del pie de arriba cae hacia adentro, inclinar el torso.',
-    dificultad: 2,
-    variantes: {
-      facil: 'Altura baja (20-25 cm).',
-      media: 'Altura estándar (40 cm) con control de bajada.',
-      avanzado: 'Con mancuernas + pausa en la cima 2 seg.'
-    },
-    natacion: 'Imita el rango de movimiento y la fuerza excéntrica que usa la pierna en la patada de delfín.'
+  6: { // Sábado — Activación suave
+    kcal: 1400, type: 'suave',
+    whey: [],
+    whey_note: 'Sin whey hoy',
+    adjustment: 'Plan base. Duerme bien esta noche — mañana es aguas abiertas.',
+    desayuno: '🥣 Avena cocida + ½ tz fresas + 1½ cdta mantequilla de maní + 1 cdta chía + 150 ml kéfir + 1 cda linaza molida + 3 claras',
+    almuerzo: '150 g pollo a la plancha + ½ tz quinua + ensalada cocida + 1 cda palta + 1 cdta aceite',
+    snack: '1 pera + 10 maníes',
+    cena: '🍳 Omelette (3 claras) + ½ tz zapallo italiano salteado + 1 cdta semillas de girasol',
+    prot: 160
   },
-  {
-    id: 'flutter-kicks',
-    name: 'Flutter kicks',
-    categories: ['pierna', 'core', 'natacion'],
-    objetivo: 'Replicar en tierra el patrón de la patada de crol. Fortalecer cadera y core mientras se activa el patrón neuromuscular de la patada.',
-    musculos: 'Flexores de cadera, recto femoral, core, cuádriceps',
-    tecnica: 'Tumbado boca arriba, espalda baja pegada al suelo (activa core). Piernas extendidas a 20-30 cm del suelo. Movimiento alternado, tobillo activo (punta levemente hacia adentro como en crol).',
-    errores: 'Lumbar despegada del suelo, rodillas flexionadas, pies demasiado altos, rango de movimiento demasiado amplio.',
-    dificultad: 2,
-    variantes: {
-      facil: '15 seg, piernas un poco más altas.',
-      media: '30 seg, piernas bajas con espalda plana.',
-      avanzado: '45 seg + brazos estirados sobre la cabeza como si nadaras.'
-    },
-    natacion: 'Transferencia directa. Es literalmente el entrenamiento en tierra de la patada de crol.'
-  },
-  {
-    id: 'halo',
-    name: 'Lateral swing to halo con mancuerna',
-    categories: ['estabilidad', 'funcional'],
-    objetivo: 'Activar serrato anterior, deltoides, manguito rotador y mejorar la movilidad de hombro bajo carga ligera.',
-    musculos: 'Serrato anterior, deltoides (las 3 cabezas), trapecio, core oblicuo',
-    tecnica: 'Sujeta la mancuerna con ambas manos. Swing lateral (lleva la mancuerna a un lado con rotación de cadera) y después haz el halo: describe un círculo completo alrededor de la cabeza, manteniendo los codos semiflexionados.',
-    errores: 'Codos demasiado extendidos, perder el control del peso por encima de la cabeza, encorvar los hombros.',
-    dificultad: 2,
-    variantes: {
-      facil: 'Solo el halo sin el swing lateral.',
-      media: 'Swing + halo completo.',
-      avanzado: 'De pie sobre una pierna para añadir demanda de equilibrio.'
-    },
-    natacion: 'El serrato anterior es el músculo clave de la brazada larga en crol. Su activación mejora la tracción en el agua.'
-  },
-  {
-    id: 'plank-shoulder',
-    name: 'Plank shoulder taps',
-    categories: ['core', 'estabilidad'],
-    objetivo: 'Estabilidad anti-rotacional del core, fuerza de hombros y control de la posición plank.',
-    musculos: 'Transverso abdominal, oblicuos, deltoides, tríceps, serrato',
-    tecnica: 'Posición de plank en manos. Sin rotar la cadera, lleva una mano al hombro contrario. Alterna. La cadera queda completamente estable.',
-    errores: 'Rotar o elevar la cadera al levantar la mano, colocar los pies demasiado juntos, colapsar los hombros.',
-    dificultad: 2,
-    variantes: {
-      facil: 'Pies separados a ancho de cadera.',
-      media: 'Pies juntos, cadencia lenta.',
-      avanzado: 'Añadir un pequeño peso en la muñeca.'
-    },
-    natacion: 'La estabilidad anti-rotacional es exactamente lo que el nadador necesita para no desperdiciar energía en movimientos laterales del torso.'
-  },
-  {
-    id: 'push-up-barra',
-    name: 'Push-up en barra',
-    categories: ['barra', 'estabilidad'],
-    objetivo: 'Fuerza de empuje con énfasis en la posición y activación del serrato anterior.',
-    musculos: 'Pectoral, tríceps, serrato anterior, deltoides anterior, core',
-    tecnica: 'Con la barra en el suelo o en soporte bajo, baja el pecho hacia la barra. Codos a 45° del cuerpo. Al subir, termina con protracción de escápulas (leve redondeo de la parte alta de la espalda).',
-    errores: 'Codos a 90°, no completar la protracción al final, cabeza adelantada.',
-    dificultad: 2,
-    variantes: {
-      facil: 'Push-up de rodillas.',
-      media: 'Push-up completo con barra.',
-      avanzado: 'Push-up con pausa de 2 seg abajo + protracción exagerada arriba.'
-    },
-    natacion: 'La protracción al final del push-up activa exactamente el serrato que usas en la fase de tracción de la brazada.'
-  },
-  {
-    id: 'elevacion-piernas',
-    name: 'Elevaciones de piernas en barra',
-    categories: ['barra', 'core', 'natacion'],
-    objetivo: 'Core con especial énfasis en flexores de cadera y recto abdominal. Patrón vertical de la patada.',
-    musculos: 'Recto abdominal, iliopsoas, recto femoral, oblicuos',
-    tecnica: 'Colgado de la barra con agarre supino o prono. Eleva las piernas manteniendo la espalda baja activa. Al inicio, rodillas flexionadas. Progresa a piernas rectas.',
-    errores: 'Balancear el cuerpo, no controlar la bajada, perder la tensión abdominal en la parte baja del movimiento.',
-    dificultad: 3,
-    variantes: {
-      facil: 'Elevación de rodillas (90°).',
-      media: 'Piernas a 45° con control.',
-      avanzado: 'Piernas rectas a 90° + pequeña rotación de pelvis al final.'
-    },
-    natacion: 'Entrenamiento directo del core vertical para la patada de mariposa y para mantener la posición horizontal en el agua.'
-  },
-  {
-    id: 'serrato-barra',
-    name: 'Serrato en barra',
-    categories: ['barra', 'estabilidad', 'natacion'],
-    objetivo: 'Aislar y fortalecer el serrato anterior, el músculo de la brazada larga.',
-    musculos: 'Serrato anterior, trapecio inferior, romboides',
-    tecnica: 'Colgado de la barra, sin doblar los codos, lleva las escápulas hacia abajo y afuera (protracción + depresión). Mantén 2 seg. Vuelve a la posición neutral.',
-    errores: 'Doblar los codos (convierte el ejercicio en una dominada), encogerse de hombros en lugar de bajar las escápulas.',
-    dificultad: 2,
-    variantes: {
-      facil: 'Solo la bajada de escápulas, sin separación.',
-      media: 'Protracción completa con pausa.',
-      avanzado: 'Añadir rotación de pelvis en la posición de máxima protracción.'
-    },
-    natacion: 'El serrato es responsable del 30-40% de la potencia de la brazada. Su fortalecimiento es la mejora más directa posible para el nado.'
-  },
-  {
-    id: 'biceps-opt',
-    name: 'Bíceps / Trapecio (opcional)',
-    categories: ['funcional', 'barra'],
-    objetivo: 'Complementar el trabajo de brazada con fuerza de codo y complejo trapecio-romboides.',
-    musculos: 'Bíceps braquial, braquial, trapecio, romboides',
-    tecnica: 'Curl de bíceps con mancuerna: codo fijo, supinación completa al subir. O shrug de trapecio: encogimiento de hombros con control.',
-    errores: 'Balancear el cuerpo, usar momentum, no completar el rango.',
-    dificultad: 1,
-    variantes: {
-      facil: 'Curl de bíceps con banda elástica.',
-      media: 'Curl alternado con mancuerna.',
-      avanzado: 'Curl inclinado en banco para mayor estiramiento.'
-    },
-    natacion: 'Complemento secundario. No prioritario, pero apoya la tracción en el agua.'
+  0: { // Domingo — Aguas abiertas
+    kcal: 1550, type: 'natacion',
+    whey: ['post_am'],
+    whey_note: '1 scoop post-natación con agua',
+    adjustment: '+½ plátano pre-natación · Tupper 1 completo post-agua',
+    desayuno: '½ plátano + 3 claras + 30 g jamón del país + espinaca + 1 salmas + 40 g palta + 1 cdta chía + 100 ml kéfir + ½ tz fresas + 1 cda linaza molida\n+ ½ plátano extra PRE-NATACIÓN',
+    almuerzo: '150 g pollo a la plancha + 1 papa + ensalada cocida + 6 aceitunas + 1 cdta aceite',
+    snack: '1 naranja + 6 almendras',
+    cena: '1 huevo sancochado + ½ tz camote + ensalada verde + 1 cdta semillas de girasol',
+    prot: 165
   }
-];
+};
 
-// ═══════════════════════════════════════════════════════════
-// 3. STATE MANAGEMENT
-// ═══════════════════════════════════════════════════════════
-
+// ════════════════════════════════════════════════════════════════
+// 3. APP STATE
+// ════════════════════════════════════════════════════════════════
 const APP = {
   currentPage: 'home',
+  currentTab: 'am',       // 'am' | 'pm' | 'nutrition'
   currentMode: 'normal',
   currentDayOfWeek: new Date().getDay(),
-  completedExercises: new Set(),
-  totalExercisesToday: 0,
+  completedExercises: { am: new Set(), pm: new Set() },
+  exerciseWeights: {},
+  mealCompleted: {},       // { 'desayuno': true, ... }
+  db: null,
+  dbReady: false,
+  sessions: [],            // fallback array
+  bodyMeasures: [],
   timerInterval: null,
   timerSeconds: 0,
   timerRunning: false,
+  timerState: 'idle',
   currentExerciseIndex: 0,
   currentSeriesCount: 0,
   currentExercise: null,
   currentRoutineExercises: [],
-  timerState: 'idle', // idle | work | rest_running | rest_done | done
-
+  currentTimerSession: 'am',  // which session is being timed
   settings: {
-    name: 'Atleta',
-    goal: 'Funcional + agua',
+    name: 'Luis',
+    goal: 'Funcional + agua + físico playa',
     mode: 'normal',
-    dailyMinTarget: 25,
-    dailySeriesTarget: 20
-  },
-
-  // { exerciseId: kg }  — persisted per exercise across sessions
-  exerciseWeights: {},
-
-  // [ { date, pecho, cintura, cadera, muslo, peso } ]
-  bodyMeasures: [],
-
-  sessions: [] // Array of session log objects
+    dailyMinTarget: 35,
+    dailySeriesTarget: 25
+  }
 };
 
-// ═══════════════════════════════════════════════════════════
-// 4. STORAGE
-// ═══════════════════════════════════════════════════════════
+let REST_TOTAL_SECS = 0;
+let _lastRenderedExIds = '';
 
+// ════════════════════════════════════════════════════════════════
+// 4. SQLITE DATABASE
+// ════════════════════════════════════════════════════════════════
+async function initDB() {
+  try {
+    if (typeof initSqlJs === 'undefined') {
+      APP.dbReady = false;
+      return false;
+    }
+    const SQL = await initSqlJs({
+      locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${f}`
+    });
+    const saved = localStorage.getItem('af_sqlite_v2');
+    if (saved) {
+      try {
+        APP.db = new SQL.Database(new Uint8Array(JSON.parse(saved)));
+      } catch {
+        APP.db = new SQL.Database();
+      }
+    } else {
+      APP.db = new SQL.Database();
+    }
+    createSchema();
+    APP.dbReady = true;
+    console.log('✅ SQLite ready');
+    return true;
+  } catch(e) {
+    console.warn('SQLite init failed, using localStorage fallback:', e.message);
+    APP.dbReady = false;
+    return false;
+  }
+}
+
+function saveDB() {
+  if (!APP.db) return;
+  try {
+    const data = APP.db.export();
+    localStorage.setItem('af_sqlite_v2', JSON.stringify(Array.from(data)));
+  } catch(e) { console.warn('DB save error:', e); }
+}
+
+function createSchema() {
+  APP.db.run(`
+    CREATE TABLE IF NOT EXISTS sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL,
+      session_type TEXT NOT NULL,
+      routine_name TEXT,
+      duration_min INTEGER DEFAULT 0,
+      exercises_completed INTEGER DEFAULT 0,
+      exercises_total INTEGER DEFAULT 0,
+      series_completed INTEGER DEFAULT 0,
+      energy INTEGER DEFAULT 0,
+      score INTEGER DEFAULT 0,
+      notes TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE TABLE IF NOT EXISTS exercise_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id INTEGER,
+      exercise_id TEXT,
+      exercise_name TEXT,
+      sets_done INTEGER DEFAULT 0,
+      reps_done INTEGER DEFAULT 0,
+      weight_kg REAL DEFAULT 0
+    );
+    CREATE TABLE IF NOT EXISTS exercise_weights (
+      exercise_id TEXT PRIMARY KEY,
+      weight_kg REAL DEFAULT 0,
+      updated_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS body_measures (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL,
+      pecho REAL, cintura REAL, cadera REAL, muslo REAL, peso REAL, notes TEXT
+    );
+    CREATE TABLE IF NOT EXISTS meal_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL,
+      meal_type TEXT,
+      completed INTEGER DEFAULT 0
+    );
+  `);
+  saveDB();
+}
+
+const DB = {
+  saveSession(s) {
+    if (APP.db) {
+      APP.db.run(
+        `INSERT INTO sessions (date,session_type,routine_name,duration_min,
+          exercises_completed,exercises_total,series_completed,energy,score,notes)
+         VALUES (?,?,?,?,?,?,?,?,?,?)`,
+        [s.date, s.type, s.routineName, s.duration||0,
+         s.exDone||0, s.exTotal||0, s.series||0, s.energy||3, s.score||0, s.notes||'']
+      );
+      const rows = APP.db.exec('SELECT last_insert_rowid()');
+      const id = rows[0]?.values[0][0];
+      saveDB();
+      return id;
+    }
+    const session = {...s, id: 'ls_'+Date.now()};
+    APP.sessions = APP.sessions.filter(x => !(x.date === s.date && x.type === s.type));
+    APP.sessions.push(session);
+    saveToStorage();
+    return session.id;
+  },
+
+  getSessionsForDate(date) {
+    if (APP.db) {
+      const rows = APP.db.exec(
+        `SELECT * FROM sessions WHERE date=? ORDER BY created_at DESC`, [date]
+      );
+      if (!rows[0]) return [];
+      const cols = rows[0].columns;
+      return rows[0].values.map(r => Object.fromEntries(cols.map((c,i) => [c,r[i]])));
+    }
+    return APP.sessions.filter(s => s.date === date);
+  },
+
+  getRecentSessions(n = 14) {
+    if (APP.db) {
+      const rows = APP.db.exec(
+        `SELECT * FROM sessions ORDER BY date DESC, created_at DESC LIMIT ?`, [n]
+      );
+      if (!rows[0]) return [];
+      const cols = rows[0].columns;
+      return rows[0].values.map(r => Object.fromEntries(cols.map((c,i) => [c,r[i]])));
+    }
+    return [...APP.sessions].sort((a,b) => b.date.localeCompare(a.date)).slice(0, n);
+  },
+
+  saveWeight(exId, kg) {
+    APP.exerciseWeights[exId] = kg;
+    if (APP.db) {
+      APP.db.run(
+        `INSERT OR REPLACE INTO exercise_weights (exercise_id,weight_kg,updated_at)
+         VALUES (?,?,datetime('now','localtime'))`, [exId, kg]
+      );
+      saveDB();
+    }
+    saveToStorage();
+  },
+
+  getWeight(exId) {
+    return APP.exerciseWeights[exId] || 0;
+  },
+
+  loadWeights() {
+    if (APP.db) {
+      const rows = APP.db.exec(`SELECT exercise_id, weight_kg FROM exercise_weights`);
+      if (rows[0]) {
+        rows[0].values.forEach(([id, kg]) => { APP.exerciseWeights[id] = kg; });
+      }
+    }
+  },
+
+  saveBodyMeasure(m) {
+    if (APP.db) {
+      APP.db.run(
+        `INSERT INTO body_measures (date,pecho,cintura,cadera,muslo,peso,notes)
+         VALUES (?,?,?,?,?,?,?)`,
+        [m.date, m.pecho||null, m.cintura||null, m.cadera||null,
+         m.muslo||null, m.peso||null, m.notes||'']
+      );
+      saveDB();
+    }
+    APP.bodyMeasures.push({...m, id: Date.now()});
+    saveToStorage();
+  },
+
+  getBodyMeasures() {
+    if (APP.db) {
+      const rows = APP.db.exec(
+        `SELECT * FROM body_measures ORDER BY date DESC LIMIT 10`
+      );
+      if (!rows[0]) return [];
+      const cols = rows[0].columns;
+      return rows[0].values.map(r => Object.fromEntries(cols.map((c,i) => [c,r[i]])));
+    }
+    return [...APP.bodyMeasures].sort((a,b) => b.date.localeCompare(a.date)).slice(0,10);
+  },
+
+  saveMealLog(date, mealType, completed) {
+    APP.mealCompleted[mealType] = completed;
+    if (APP.db) {
+      APP.db.run(
+        `INSERT OR REPLACE INTO meal_logs (date,meal_type,completed) VALUES (?,?,?)`,
+        [date, mealType, completed ? 1 : 0]
+      );
+      saveDB();
+    }
+    saveToStorage();
+  },
+
+  getMealLogsForDate(date) {
+    if (APP.db) {
+      const rows = APP.db.exec(
+        `SELECT meal_type, completed FROM meal_logs WHERE date=?`, [date]
+      );
+      const result = {};
+      if (rows[0]) rows[0].values.forEach(([t, c]) => { result[t] = !!c; });
+      return result;
+    }
+    return APP.mealCompleted;
+  },
+
+  getStreakDates() {
+    if (APP.db) {
+      const rows = APP.db.exec(
+        `SELECT DISTINCT date FROM sessions WHERE score > 0 ORDER BY date DESC LIMIT 30`
+      );
+      if (!rows[0]) return [];
+      return rows[0].values.map(r => r[0]);
+    }
+    return [...new Set(APP.sessions.filter(s => s.score > 0).map(s => s.date))].sort().reverse();
+  }
+};
+
+// ════════════════════════════════════════════════════════════════
+// 5. STORAGE (localStorage fallback)
+// ════════════════════════════════════════════════════════════════
 function saveToStorage() {
   try {
-    localStorage.setItem('af_sessions',        JSON.stringify(APP.sessions));
-    localStorage.setItem('af_settings',        JSON.stringify(APP.settings));
-    localStorage.setItem('af_weights',         JSON.stringify(APP.exerciseWeights));
-    localStorage.setItem('af_measures',        JSON.stringify(APP.bodyMeasures));
-    localStorage.setItem('af_completed_today', JSON.stringify({
-      date:      getTodayKey(),
-      exercises: Array.from(APP.completedExercises)
+    localStorage.setItem('af_sessions_v2',   JSON.stringify(APP.sessions));
+    localStorage.setItem('af_settings_v2',   JSON.stringify(APP.settings));
+    localStorage.setItem('af_weights_v2',    JSON.stringify(APP.exerciseWeights));
+    localStorage.setItem('af_measures_v2',   JSON.stringify(APP.bodyMeasures));
+    localStorage.setItem('af_meal_log',      JSON.stringify(APP.mealCompleted));
+    localStorage.setItem('af_completed_v2',  JSON.stringify({
+      date: getTodayKey(),
+      am:   Array.from(APP.completedExercises.am),
+      pm:   Array.from(APP.completedExercises.pm)
     }));
   } catch(e) { console.warn('Storage error:', e); }
 }
 
 function loadFromStorage() {
   try {
-    const sessions = localStorage.getItem('af_sessions');
-    if (sessions) {
-      const parsed = JSON.parse(sessions);
-      // Normalizar sesiones antiguas (v1.0/v1.1) que tienen score como número, no objeto
-      APP.sessions = parsed.map(s => {
-        if (!s.scoreData && typeof s.score === 'number') {
-          // Reconstruir scoreData aproximado a partir del score total
-          s.scoreData = {
-            total: s.score,
-            completion: Math.round(s.score * 0.4),
-            volume:     Math.round(s.score * 0.25),
-            time:       Math.round(s.score * 0.2),
-            energy:     Math.round(s.score * 0.1),
-            consistency: Math.round(s.score * 0.05)
-          };
-        }
-        // Asegurar que score sea número
-        if (s.scoreData && typeof s.score !== 'number') {
-          s.score = s.scoreData.total || 0;
-        }
-        return s;
-      });
-    }
+    const sessions = localStorage.getItem('af_sessions_v2');
+    if (sessions) APP.sessions = JSON.parse(sessions);
 
-    const settings = localStorage.getItem('af_settings');
-    if (settings) APP.settings = { ...APP.settings, ...JSON.parse(settings) };
+    const settings = localStorage.getItem('af_settings_v2');
+    if (settings) APP.settings = {...APP.settings, ...JSON.parse(settings)};
 
-    const weights = localStorage.getItem('af_weights');
+    const weights = localStorage.getItem('af_weights_v2');
     if (weights) APP.exerciseWeights = JSON.parse(weights);
 
-    const measures = localStorage.getItem('af_measures');
+    const measures = localStorage.getItem('af_measures_v2');
     if (measures) APP.bodyMeasures = JSON.parse(measures);
-    if (completedToday) {
-      const parsed = JSON.parse(completedToday);
+
+    const mealLog = localStorage.getItem('af_meal_log');
+    if (mealLog) APP.mealCompleted = JSON.parse(mealLog);
+
+    const completed = localStorage.getItem('af_completed_v2');
+    if (completed) {
+      const parsed = JSON.parse(completed);
       if (parsed.date === getTodayKey()) {
-        APP.completedExercises = new Set(parsed.exercises);
+        APP.completedExercises.am = new Set(parsed.am || []);
+        APP.completedExercises.pm = new Set(parsed.pm || []);
       }
     }
   } catch(e) { console.warn('Load error:', e); }
 }
 
-function getTodayKey() {
-  // IMPORTANTE: usar fecha LOCAL, no UTC (toISOString usa UTC y puede desfasar un día)
-  return localDateKey(new Date());
-}
-
-// Helper: fecha local en formato YYYY-MM-DD
+// ════════════════════════════════════════════════════════════════
+// 6. HELPERS
+// ════════════════════════════════════════════════════════════════
 function localDateKey(d) {
-  const y  = d.getFullYear();
-  const m  = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${dd}`;
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
+function getTodayKey() { return localDateKey(new Date()); }
 
-function loadDemoData() {
-  // Create 10 days of realistic demo sessions
-  const today = new Date();
-  const demoSessions = [];
-  const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-  const sessionTypes = ['casa', 'casa', 'casa', 'recovery', 'casa', 'casa', 'recovery', 'aguas', 'casa', 'casa'];
-
-  for (let i = 9; i >= 1; i--) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    const dow = d.getDay();
-    const routine = WEEKLY_ROUTINES[dow];
-    const energy = Math.floor(Math.random() * 2) + 3; // 3-5
-    const completed = Math.random() > 0.2; // 80% completion rate
-    const minutes = completed ? Math.floor(Math.random() * 10) + routine.duration.split('-')[0].replace(/\D/g,'') * 1 : Math.floor(Math.random() * 10) + 8;
-    const series = completed ? Math.floor(Math.random() * 5) + 12 : Math.floor(Math.random() * 8) + 3;
-
-    const s = {
-      id: `demo_${i}`,
-      date: localDateKey(d),
-      routineName: routine.name,
-      sessionType: sessionTypes[i] || 'casa',
-      energy,
-      minutesTracker: parseInt(minutes),
-      seriesCompleted: series,
-      exercisesCompleted: completed ? Math.floor(Math.random() * 2) + routine.exercises.length - 1 : Math.floor(routine.exercises.length / 2),
-      exercisesTotal: routine.exercises.length,
-      routineCompleted: completed,
-      pain: 'ninguna',
-      notes: '',
-      scoreData: null,
-      score: 0
-    };
-    const sd = calculateScore(s);
-    s.scoreData = sd;
-    s.score = sd.total;
-    demoSessions.push(s);
-  }
-
-  APP.sessions = demoSessions;
-  saveToStorage();
-  showToast('¡Datos demo cargados!', 'success');
-  refreshAllUI();
-}
-
-// ═══════════════════════════════════════════════════════════
-// 5. HELPERS
-// ═══════════════════════════════════════════════════════════
-
-function getTodayRoutine() {
-  return WEEKLY_ROUTINES[APP.currentDayOfWeek];
-}
-
-function getTomorrowRoutine() {
-  return WEEKLY_ROUTINES[(APP.currentDayOfWeek + 1) % 7];
-}
+function getTodaySchedule() { return DAILY_SCHEDULE[APP.currentDayOfWeek]; }
+function getTomorrowSchedule() { return DAILY_SCHEDULE[(APP.currentDayOfWeek + 1) % 7]; }
+function getTodayMeals() { return MEAL_PLAN[APP.currentDayOfWeek]; }
 
 function getModifiedExercises(exercises, mode) {
+  if (!exercises) return [];
   return exercises.map(ex => {
-    const e = { ...ex };
+    const e = {...ex};
     if (mode === 'ligero') {
       e.sets = Math.max(1, Math.ceil(ex.sets * 0.6));
       if (e.reps) e.reps = Math.max(5, Math.ceil(ex.reps * 0.7));
@@ -543,129 +594,47 @@ function getModifiedExercises(exercises, mode) {
 }
 
 function formatDate(d) {
-  const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  const days   = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]}`;
 }
-
-function formatTime(seconds) {
-  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-  const s = (seconds % 60).toString().padStart(2, '0');
-  return `${m}:${s}`;
+function formatTime(s) {
+  return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
 }
 
-function calculateScore(session) {
-  // ── 5 componentes con pesos calibrados ──────────────────
-  // 1. Completion  (0-35): porcentaje de ejercicios realizados
-  // 2. Volume      (0-25): series vs. total planeado
-  // 3. Time        (0-20): minutos vs. meta diaria
-  // 4. Energy      (0-10): energía reportada (1-5 → 2-10)
-  // 5. Consistency (0-10): bonus por racha activa
-
-  let completion = 0;
-  const exRatio = session.exercisesTotal > 0
-    ? session.exercisesCompleted / session.exercisesTotal : 0;
-
-  if (session.routineCompleted || exRatio >= 1)   completion = 35;
-  else if (exRatio >= 0.8)                        completion = 30;
-  else if (exRatio >= 0.6)                        completion = 22;
-  else if (exRatio >= 0.4)                        completion = 14;
-  else if (exRatio >= 0.2)                        completion =  7;
-  else if (session.exercisesCompleted > 0)        completion =  3;
-
-  // Volume: series reales vs. planeadas de la rutina
-  const routine    = WEEKLY_ROUTINES[new Date().getDay()];
-  const plannedSets = (routine.exercises || []).reduce((s, e) => s + (e.sets || 0), 0);
-  const seriesRatio = plannedSets > 0
-    ? Math.min(1, session.seriesCompleted / plannedSets) : 0;
-  const volume = Math.round(seriesRatio * 25);
-
-  // Time vs. meta
-  const targetMin = APP.settings.dailyMinTarget;
-  const timeRatio = targetMin > 0
-    ? Math.min(1, session.minutesTracker / targetMin) : 0;
-  const time = Math.round(timeRatio * 20);
-
-  // Energy (1→2, 2→4, 3→6, 4→8, 5→10)
-  const energy = session.energy ? session.energy * 2 : 0;
-
-  // Consistency bonus
-  const streak = getStreak();
-  const consistency = streak >= 7 ? 10
-    : streak >= 5 ? 8
-    : streak >= 3 ? 5
-    : streak >= 1 ? 3 : 0;
-
-  const total = completion + volume + time + energy + consistency;
-  return {
-    total:      Math.min(100, Math.round(total)),
-    completion: Math.min(35, completion),
-    volume:     Math.min(25, volume),
-    time:       Math.min(20, time),
-    energy:     Math.min(10, energy),
-    consistency:Math.min(10, consistency)
-  };
+function calculateScore(s) {
+  const exRatio = s.exTotal > 0 ? s.exCompleted / s.exTotal : 0;
+  let completion = exRatio >= 1 ? 35 : exRatio >= 0.8 ? 30 : exRatio >= 0.6 ? 22 : exRatio >= 0.4 ? 14 : exRatio > 0 ? 7 : 0;
+  const sched    = DAILY_SCHEDULE[new Date().getDay()];
+  const session  = s.type === 'AM' ? sched?.am : sched?.pm;
+  const planned  = (session?.exercises || []).reduce((t, e) => t + (e.sets||0), 0);
+  const volume   = Math.round(Math.min(1, planned > 0 ? s.series / planned : 0) * 25);
+  const time     = Math.round(Math.min(1, s.duration / (APP.settings.dailyMinTarget||25)) * 20);
+  const energy   = (s.energy||0) * 2;
+  const streak   = getStreak();
+  const consist  = streak >= 7 ? 10 : streak >= 5 ? 8 : streak >= 3 ? 5 : streak >= 1 ? 3 : 0;
+  return Math.min(100, completion + volume + time + energy + consist);
 }
 
-// ── calculateLoad: basada en el volumen real de la rutina ──
-function calculateLoad(exercises, mode) {
-  if (!exercises || exercises.length === 0) return 'suave';
-
-  const totalSets = exercises.reduce((s, e) => s + (e.sets || 0), 0);
-  const avgRest   = exercises.reduce((s, e) => s + (e.rest || 60), 0) / exercises.length;
-
-  // Clasificación base por volumen + densidad de trabajo
-  let load;
-  if (totalSets >= 22 || (totalSets >= 16 && avgRest <= 45))      load = 'alta';
-  else if (totalSets >= 13 || (totalSets >= 10 && avgRest <= 50)) load = 'moderada';
-  else                                                              load = 'suave';
-
-  // Ajuste por modo del usuario
-  if (mode === 'intenso' && load === 'suave')    load = 'moderada';
-  if (mode === 'intenso' && load === 'moderada') load = 'alta';
-  if (mode === 'ligero'  && load === 'alta')     load = 'moderada';
-  if (mode === 'ligero'  && load === 'moderada') load = 'suave';
-
-  return load;
+function getScoreLabel(s) {
+  return s >= 85 ? 'Excelente' : s >= 70 ? 'Bien completado' : s >= 50 ? 'Parcial' : s >= 25 ? 'Recovery' : 'No completado';
 }
-
-const LOAD_DESC = {
-  suave:    'Sesión ligera: movilidad y activación. Perfecta para recuperar.',
-  moderada: 'Carga equilibrada: fuerza + técnica. Tu zona de progreso.',
-  alta:     'Sesión exigente: máximo volumen. Asegúrate de dormir y comer bien.'
-};
-
-function getScoreLabel(score) {
-  if (score >= 85) return 'Excelente';
-  if (score >= 70) return 'Bien completado';
-  if (score >= 50) return 'Parcial';
-  if (score >= 25) return 'Recovery';
-  return 'No completado';
+function getScoreColor(s) {
+  return s >= 85 ? 'aqua' : s >= 70 ? 'green' : s >= 50 ? 'yellow' : s >= 25 ? 'orange' : 'red';
 }
-
-function getScoreColor(score) {
-  if (score >= 85) return 'aqua';
-  if (score >= 70) return 'green';
-  if (score >= 50) return 'yellow';
-  if (score >= 25) return 'orange';
-  return 'red';
-}
-
-function getEnergyLabel(energy) {
-  const labels = { 1: 'Muy bajo', 2: 'Bajo', 3: 'Medio', 4: 'Sólido', 5: 'Fuerte' };
-  return labels[energy] || '—';
+function getEnergyLabel(e) {
+  return ['','Muy bajo','Bajo','Medio','Sólido','Fuerte'][e] || '—';
 }
 
 function getStreak() {
-  if (APP.sessions.length === 0) return 0;
+  const dates = DB.getStreakDates();
+  if (!dates.length) return 0;
   let streak = 0;
   const today = new Date();
   for (let i = 0; i < 30; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
-    const key = localDateKey(d);
-    const session = APP.sessions.find(s => s.date === key);
-    if (session && session.routineCompleted) streak++;
+    if (dates.includes(localDateKey(d))) streak++;
     else if (i > 0) break;
   }
   return streak;
@@ -673,111 +642,117 @@ function getStreak() {
 
 function getWeekStats() {
   const today = new Date();
-  const weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - today.getDay()); // Sunday
-  let daysCompleted = 0, totalMinutes = 0;
-
+  const todayDow = today.getDay();
+  let completed = 0, minutes = 0;
   for (let i = 0; i < 7; i++) {
-    const d = new Date(weekStart);
-    d.setDate(weekStart.getDate() + i);
+    const d = new Date(today);
+    d.setDate(today.getDate() - todayDow + i);
     const key = localDateKey(d);
-    const session = APP.sessions.find(s => s.date === key);
-    if (session) {
-      if (session.routineCompleted) daysCompleted++;
-      totalMinutes += session.minutesTracker || 0;
+    const sessions = DB.getSessionsForDate(key);
+    if (sessions.length) {
+      completed++;
+      minutes += sessions.reduce((t, s) => t + (s.duration_min || s.duration || 0), 0);
     }
   }
-  return { daysCompleted, totalMinutes, totalSessions: APP.sessions.length };
+  return { completed, minutes, total: APP.sessions.length };
 }
 
-function getTodaySession() {
-  return APP.sessions.find(s => s.date === getTodayKey());
+function getTodaySessionsData() {
+  return DB.getSessionsForDate(getTodayKey());
 }
 
 function getLast7Days() {
-  const days = [];
   const today = new Date();
-  const dayShort = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
-  for (let i = 6; i >= 0; i--) {
+  const labels = ['D','L','M','X','J','V','S'];
+  return Array.from({length:7}, (_,i) => {
     const d = new Date(today);
-    d.setDate(today.getDate() - i);
+    d.setDate(today.getDate() - 6 + i);
     const key = localDateKey(d);
-    const session = APP.sessions.find(s => s.date === key);
-    days.push({
-      label: dayShort[d.getDay()],
-      isToday: i === 0,
-      session
-    });
-  }
-  return days;
+    const sessions = DB.getSessionsForDate(key);
+    const bestSession = sessions.reduce((b,s) => (s.score||0) > (b?.score||0) ? s : b, null);
+    return { label: labels[d.getDay()], isToday: i===6, session: bestSession, key };
+  });
 }
 
 function getWeekDots() {
   const today = new Date();
   const todayDow = today.getDay();
-  const dots = [];
-  for (let i = 0; i < 7; i++) {
+  return Array.from({length:7}, (_,i) => {
     const d = new Date(today);
     d.setDate(today.getDate() - todayDow + i);
-    const key = localDateKey(d);
-    const session = APP.sessions.find(s => s.date === key);
-    dots.push({
-      isToday: i === todayDow,
-      done: session && session.routineCompleted
+    const sessions = DB.getSessionsForDate(localDateKey(d));
+    return { isToday: i === todayDow, done: sessions.some(s => s.score > 0) };
+  });
+}
+
+function getWeeklyScore() {
+  const today = new Date();
+  const todayDow = today.getDay();
+  let total = 0, count = 0, best = 0;
+  for (let i = 0; i <= todayDow; i++) {
+    const d = new Date(today); d.setDate(today.getDate() - todayDow + i);
+    const sessions = DB.getSessionsForDate(localDateKey(d));
+    sessions.forEach(s => {
+      if (s.score > 0) { total += s.score; count++; best = Math.max(best, s.score); }
     });
   }
-  return dots;
+  return { avg: count > 0 ? Math.round(total/count) : 0, best, count };
 }
 
 function getPhrase(score) {
   if (score >= 85) return '"Hoy sumaste control, no solo volumen. Eso se nota en el agua."';
-  if (score >= 70) return '"Buen trabajo: mantuviste técnica y consistencia."';
+  if (score >= 70) return '"Buen trabajo: mantuviste técnica y constancia."';
   if (score >= 50) return '"La constancia está subiendo. Cada sesión cuenta."';
-  if (score > 0) return '"Hoy fue recovery. El descanso activo también entrena."';
+  if (score > 0)   return '"Hoy fue recovery. El descanso activo también entrena."';
   const streak = getStreak();
-  if (streak > 3) return '"Tu racha habla por sí sola. Muéstrate hoy también."';
+  if (streak > 3) return `"${streak} días seguidos. Tu racha habla por sí sola."`;
   return '"La constancia construye más que la intensidad. Muéstrate hoy."';
 }
 
 function getRecommendations() {
   const recs = [];
   const stats = getWeekStats();
-  const todaySession = getTodaySession();
   const streak = getStreak();
-
-  if (streak > 5) recs.push('Llevas ' + streak + ' días seguidos. Considera un recovery si sientes fatiga acumulada.');
-  if (stats.daysCompleted >= 5) recs.push('La próxima semana sube 1-2 reps en push-up en barra y zancadas.');
-  if (stats.daysCompleted <= 2 && stats.totalSessions > 0) recs.push('Esta semana fue complicada. Sigue: incluso 15 min cuenta como sesión.');
-  if (APP.currentDayOfWeek === 4) recs.push('Hoy es jueves: tu sesión más intensa. Dale prioridad a las piernas.');
-  if (APP.currentDayOfWeek === 3) recs.push('Hoy es miércoles. Recovery activo: no te lo saltes, es parte del plan.');
-  if (todaySession && todaySession.energy <= 2) recs.push('Energía baja hoy. Reduce las series y mantén la movilidad. No te fuerces.');
-  if (!todaySession) recs.push('Aún no has registrado la sesión de hoy. ¡Ve a entrenar!');
-
-  if (recs.length === 0) recs.push('Mantén el volumen esta semana. Estás en zona de adaptación óptima.');
+  const dow = APP.currentDayOfWeek;
+  if (streak > 7) recs.push('Llevas '+streak+' días seguidos. Asegúrate de dormir 7h+ los días sin clase.');
+  if (stats.completed >= 5) recs.push('Esta semana sube 2.5 kg en sentadilla si completaste todas las reps el lunes y jueves.');
+  if (dow === 1 || dow === 4) recs.push('Día de pierna: come el desayuno reforzado antes de entrenar y toma el whey inmediatamente después.');
+  if (dow === 2 || dow === 5) recs.push('Día doble: recuerda el segundo scoop de whey post-gym en la tarde.');
+  if (dow === 3) recs.push('Recovery activo hoy. No te lo saltes — es parte del plan.');
+  if (!recs.length) recs.push('Mantén el volumen. Estás en zona de adaptación óptima.');
   return recs;
 }
 
-// ═══════════════════════════════════════════════════════════
-// 6. NAVIGATION
-// ═══════════════════════════════════════════════════════════
+function calculateLoad(exercises, mode) {
+  if (!exercises?.length) return 'suave';
+  const sets = exercises.reduce((s, e) => s + (e.sets||0), 0);
+  const avgRest = exercises.reduce((s, e) => s + (e.rest||60), 0) / exercises.length;
+  let load = sets >= 22 || (sets >= 16 && avgRest <= 45) ? 'alta'
+           : sets >= 13 || (sets >= 10 && avgRest <= 50) ? 'moderada' : 'suave';
+  if (mode === 'intenso' && load !== 'alta')     load = load === 'suave' ? 'moderada' : 'alta';
+  if (mode === 'ligero'  && load !== 'suave')    load = load === 'alta'  ? 'moderada' : 'suave';
+  return load;
+}
+const LOAD_DESC = {
+  suave:    'Sesión ligera: movilidad y activación. Perfecta para recuperar.',
+  moderada: 'Carga equilibrada: fuerza + técnica. Tu zona de progreso.',
+  alta:     'Sesión exigente: máximo volumen. Asegúrate de dormir y comer bien.'
+};
 
+// ════════════════════════════════════════════════════════════════
+// 7. NAVIGATION
+// ════════════════════════════════════════════════════════════════
 function navigateTo(page) {
-  // Close modal and stop any running timer
   stopTimer();
   document.getElementById('timer-modal').classList.add('hidden');
-
+  document.getElementById('measures-modal').classList.add('hidden');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
   const pageEl = document.getElementById('page-' + page);
   if (pageEl) pageEl.classList.add('active');
-
   const navEl = document.querySelector(`[data-page="${page}"]`);
   if (navEl) navEl.classList.add('active');
-
   APP.currentPage = page;
-
-  // Refresh page-specific UI
   if (page === 'home')      renderHome();
   if (page === 'today')     renderToday();
   if (page === 'dashboard') renderDashboard();
@@ -785,641 +760,636 @@ function navigateTo(page) {
   if (page === 'settings')  renderSettings();
 }
 
-// ═══════════════════════════════════════════════════════════
-// 7. HOME PAGE
-// ═══════════════════════════════════════════════════════════
+function switchTab(tab) {
+  APP.currentTab = tab;
+  document.querySelectorAll('.stab').forEach(b => {
+    b.classList.remove('active-am','active-pm','active-nut');
+    if (b.dataset.tab === tab) {
+      if (tab === 'am')        b.classList.add('active-am');
+      else if (tab === 'pm')   b.classList.add('active-pm');
+      else                     b.classList.add('active-nut');
+    }
+  });
+  renderTodayContent();
+}
 
+// ════════════════════════════════════════════════════════════════
+// 8. HOME
+// ════════════════════════════════════════════════════════════════
 function renderHome() {
-  const today = new Date();
-  const routine = getTodayRoutine();
-  const tomorrow = getTomorrowRoutine();
-  const todaySession = getTodaySession();
-  const stats = getWeekStats();
-  const streak = getStreak();
+  const today     = new Date();
+  const sched     = getTodaySchedule();
+  const tomorrow  = getTomorrowSchedule();
+  const stats     = getWeekStats();
+  const streak    = getStreak();
+  const todaySess = getTodaySessionsData();
+  const amDone    = todaySess.some(s => s.session_type === 'AM' && s.score > 0);
+  const pmDone    = todaySess.some(s => s.session_type === 'PM' && s.score > 0);
 
-  // Date & day
-  document.getElementById('home-date').textContent = formatDate(today);
-  document.getElementById('home-day-name').textContent = routine.name;
-  document.getElementById('home-focus').textContent = routine.focus;
-  document.getElementById('home-coach-msg').textContent = routine.coach;
-  document.getElementById('home-duration').textContent = routine.duration;
-  document.getElementById('home-goal-pill').textContent = routine.goal.split('.')[0].substring(0, 25) + '…';
-  document.getElementById('home-streak').textContent = streak;
+  document.getElementById('home-date').textContent    = formatDate(today);
+  document.getElementById('home-streak').textContent  = streak;
+  document.getElementById('stat-week-days').textContent   = stats.completed;
+  document.getElementById('stat-week-min').textContent    = stats.minutes;
+  document.getElementById('stat-total-sessions').textContent = stats.total;
 
-  // Tags
-  renderTags('home-tags', routine.tags);
-
-  // Completed today?
-  const completedBanner = document.getElementById('home-completed-banner');
-  if (todaySession && todaySession.routineCompleted) {
-    completedBanner.style.display = 'flex';
-    document.getElementById('btn-start-routine').textContent = '↩ Volver a la rutina';
-  } else {
-    completedBanner.style.display = 'none';
-    document.getElementById('btn-start-routine').textContent = '▶ Empezar rutina';
+  // AM card
+  const amCard = document.getElementById('home-am-card');
+  const amName = document.getElementById('home-am-name');
+  const amMeta = document.getElementById('home-am-meta');
+  const amBtn  = document.getElementById('btn-home-am');
+  const amTags = document.getElementById('home-am-tags');
+  if (sched?.am) {
+    amName.textContent = sched.am.name;
+    amMeta.textContent = sched.am.duration + ' · ' + (sched.am.exercises?.length||0) + ' ejerc.';
+    amTags.innerHTML = sched.am.tags.map(t => `<span class="tag ${t}">${t}</span>`).join('');
+    amBtn.textContent = amDone ? '✓ Completado' : '▶ Iniciar';
+    amCard.style.opacity = '1';
   }
 
-  // Mini stats
-  document.getElementById('stat-week-days').textContent = stats.daysCompleted;
-  document.getElementById('stat-week-min').textContent = stats.totalMinutes;
-  document.getElementById('stat-total-sessions').textContent = APP.sessions.length;
+  // PM card
+  const pmCard   = document.getElementById('home-pm-card');
+  const pmName   = document.getElementById('home-pm-name');
+  const pmMeta   = document.getElementById('home-pm-meta');
+  const pmBtn    = document.getElementById('btn-home-pm');
+  const pmNote   = document.getElementById('home-pm-note');
+  const pmTags   = document.getElementById('home-pm-tags');
+  if (sched?.pm) {
+    pmCard.style.display = 'block';
+    pmNote.style.display = 'none';
+    pmName.textContent = sched.pm.name;
+    pmMeta.textContent = sched.pm.duration + ' · ' + (sched.pm.exercises?.length||0) + ' ejerc.';
+    pmTags.innerHTML = sched.pm.tags.map(t => `<span class="tag ${t}">${t}</span>`).join('');
+    pmBtn.textContent = pmDone ? '✓ Completado' : '▶ Iniciar';
+  } else {
+    pmCard.style.display = 'none';
+    pmNote.style.display = 'block';
+    pmNote.textContent = sched?.pmNote || '✅ Sin sesión PM';
+  }
+
+  // Coach msg
+  document.getElementById('home-coach').textContent = sched?.am?.coach || '';
 
   // Tomorrow
-  document.getElementById('tomorrow-name').textContent = tomorrow.name;
-  document.getElementById('tomorrow-tip').textContent = tomorrow.tip;
-  document.getElementById('tomorrow-load-badge').textContent = tomorrow.load.charAt(0).toUpperCase() + tomorrow.load.slice(1);
-  document.getElementById('tomorrow-load-badge').className = 'tag ' + (tomorrow.load === 'alta' ? 'core' : tomorrow.load === 'moderada' ? 'estabilidad' : 'recovery');
-  renderTags('tomorrow-tags', tomorrow.tags);
+  const tom = tomorrow?.am || tomorrow?.pm;
+  document.getElementById('tomorrow-name').textContent = `${tomorrow?.label} — ${tom?.name || 'Descanso'}`;
+  document.getElementById('tomorrow-note').textContent = tomorrow?.am?.focus || '';
 }
 
-function renderTags(containerId, tags) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  container.innerHTML = tags.map(t => `<span class="tag ${t}">${t.charAt(0).toUpperCase() + t.slice(1)}</span>`).join('');
-}
-
-// ═══════════════════════════════════════════════════════════
-// 8. TODAY PAGE (RUTINA DEL DÍA)
-// ═══════════════════════════════════════════════════════════
-
+// ════════════════════════════════════════════════════════════════
+// 9. TODAY — 3 TABS
+// ════════════════════════════════════════════════════════════════
 function renderToday() {
-  const today = new Date();
-  const dow = today.getDay();
-  const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-  const routine = getTodayRoutine();
-  const exercises = getModifiedExercises(routine.exercises, APP.currentMode);
+  const sched = getTodaySchedule();
+  const hasPM = !!sched?.pm;
 
-  APP.currentRoutineExercises = exercises;
-  APP.totalExercisesToday = exercises.length;
-  _lastRenderedExIds = ''; // fresh page load → full draw with stagger
-
-  document.getElementById('today-day-label').textContent = dayNames[dow].toUpperCase();
-  document.getElementById('today-routine-name').textContent = routine.name;
-  document.getElementById('today-routine-goal').textContent = routine.goal;
-  renderTags('today-tags', routine.tags);
-
-  // Special Sunday view
-  if (routine.isSunday) {
-    renderSundayView();
-    return;
+  // Update tab labels
+  const amTab  = document.getElementById('tab-am');
+  const pmTab  = document.getElementById('tab-pm');
+  const nutTab = document.getElementById('tab-nut');
+  if (amTab) amTab.textContent = `☀️ AM · ${sched?.am?.duration || '—'}`;
+  if (pmTab) {
+    pmTab.textContent = hasPM ? `🌙 PM · ${sched?.pm?.duration || '—'}` : '🌙 PM';
+    pmTab.style.opacity = hasPM ? '1' : '0.4';
   }
 
-  renderExerciseList(exercises);
-  updateTodayProgress();
+  _lastRenderedExIds = '';
+  renderTodayContent();
 }
 
-function renderSundayView() {
-  const routine = getTodayRoutine();
-  const list = document.getElementById('today-exercise-list');
-  list.innerHTML = `
-    <div class="sunday-banner">
-      <div class="sunday-icon">🌊</div>
-      <div class="sunday-title">Aguas Abiertas</div>
-      <div class="sunday-sub">${routine.goal}</div>
-      <div class="sunday-pillars">
-        <span class="sunday-pillar">Adaptación</span>
-        <span class="sunday-pillar">Técnica</span>
-        <span class="sunday-pillar">Patada</span>
-        <span class="sunday-pillar">Orientación</span>
-        <span class="sunday-pillar">Control</span>
+function renderTodayContent() {
+  const sched  = getTodaySchedule();
+  const tab    = APP.currentTab;
+  const content = document.getElementById('today-content');
+  if (!content) return;
+
+  if (tab === 'am') {
+    renderSessionContent(sched?.am, 'am', content);
+  } else if (tab === 'pm') {
+    if (sched?.pm) renderSessionContent(sched.pm, 'pm', content);
+    else {
+      content.innerHTML = `
+        <div style="text-align:center;padding:48px 24px">
+          <div style="font-size:48px;margin-bottom:12px">🌙</div>
+          <div style="font-family:var(--font-d);font-size:24px;font-weight:800;color:var(--text);margin-bottom:8px">${sched?.label || 'Hoy'}</div>
+          <div style="font-family:var(--font-body);font-size:14px;color:var(--text3);line-height:1.5">${sched?.pmNote || 'Sin sesión PM este día'}</div>
+        </div>`;
+    }
+  } else {
+    renderNutritionContent(content);
+  }
+}
+
+function renderSessionContent(session, type, container) {
+  if (!session) return;
+  const exercises = getModifiedExercises(session.exercises, APP.currentMode);
+  if (type === 'am') APP.currentRoutineExercises = exercises;
+
+  const completed = APP.completedExercises[type];
+  const done = completed.size;
+  const total = exercises.length;
+  const pct = total > 0 ? Math.round((done/total)*100) : 0;
+  const isGym  = session.type === 'gym';
+  const isSunday = session.isSunday;
+  const accent = type === 'pm' ? 'var(--orange)' : 'var(--aqua)';
+
+  let html = `
+    <div class="routine-header" style="${type==='pm' ? 'border-color:rgba(255,107,43,.2)' : ''}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span class="session-pill ${type}">${type==='am'?'☀️ AM':'🌙 PM'}</span>
+        <span style="font-family:var(--font-ui);font-size:10px;color:var(--text3)">${session.location || ''}</span>
       </div>
-    </div>
+      <div class="routine-name">${session.name}</div>
+      <div class="routine-goal">${session.focus}</div>
+      <div class="tags" style="margin-bottom:12px">${session.tags.map(t=>`<span class="tag ${t}">${t}</span>`).join('')}</div>
   `;
 
-  // Still show exercises below
-  routine.exercises.forEach((ex, i) => {
-    const card = document.createElement('div');
-    card.className = 'exercise-card' + (APP.completedExercises.has(ex.id) ? ' completed' : '');
-    card.innerHTML = `
-      <div class="ex-head">
-        <div class="ex-name">${ex.name}</div>
-        <div class="ex-status">${APP.completedExercises.has(ex.id) ? '✓' : ''}</div>
+  if (!isSunday) {
+    html += `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span class="section-title" style="margin:0">PROGRESO</span>
+        <span style="font-family:var(--font-ui);font-size:12px;font-weight:700;color:${accent}">${done} / ${total}</span>
       </div>
-      <div class="ex-meta">
-        <span>${ex.duration || (ex.reps + ' reps')}</span>
-        ${ex.rest ? `<span class="sep">·</span><span>Descanso ${ex.rest}s</span>` : ''}
-      </div>
-      <div class="ex-note">${ex.note}</div>
-      <div class="ex-actions">
-        <button class="btn btn-ghost btn-sm" onclick="markExerciseDone('${ex.id}')">
-          ${APP.completedExercises.has(ex.id) ? '✓ Completado' : 'Marcar completado'}
-        </button>
+      <div class="routine-progress">
+        <div class="routine-progress-fill" id="progress-fill-${type}" style="width:${pct}%;${type==='pm'?'background:linear-gradient(90deg,var(--orange),var(--yellow));box-shadow:0 0 10px rgba(255,107,43,.4)':''}"></div>
       </div>
     `;
-    list.appendChild(card);
+  }
+  html += '</div>';
+
+  if (isSunday) {
+    html += `
+      <div class="sunday-banner">
+        <div class="sunday-icon">🌊</div>
+        <div class="sunday-title">Aguas Abiertas</div>
+        <div class="sunday-sub">${session.focus}</div>
+        <div class="sunday-pillars">
+          <span class="sunday-pillar">Adaptación</span>
+          <span class="sunday-pillar">Técnica</span>
+          <span class="sunday-pillar">Patada</span>
+          <span class="sunday-pillar">Orientación</span>
+        </div>
+      </div>`;
+  }
+
+  exercises.forEach((ex, i) => {
+    const isDone = completed.has(ex.id);
+    const repStr = ex.reps ? `${ex.reps} reps` : (ex.duration || '');
+    const weight = DB.getWeight(ex.id);
+    const isMain = ex.isMain;
+    html += `
+      <div class="exercise-card stagger-item${isDone?' completed':''}${isMain?' main-ex':''}" id="ex-card-${type}-${ex.id}">
+        <div class="ex-head">
+          <div class="ex-name">
+            <span class="ex-num">${String(i+1).padStart(2,'0')}</span>${ex.name}
+          </div>
+          <div class="ex-status">${isDone?'✓':''}</div>
+        </div>
+        <div class="chips">
+          <span class="chip series ${type==='pm'?'pm':''}">${ex.sets} series</span>
+          <span class="chip reps">${repStr}</span>
+          ${ex.rest ? `<span class="chip rest">⏱ ${ex.rest}s</span>` : ''}
+          ${ex.tempo ? `<span class="chip tempo">${ex.tempo}</span>` : ''}
+          ${weight > 0 ? `<span class="chip weight">⚖ ${weight} kg</span>` : ''}
+        </div>
+        <div class="ex-note">${ex.note}</div>
+        <div class="ex-actions">
+          <button class="btn-start${type==='pm'?' pm-btn':''}" onclick="openTimerModal(${i},'${type}')">▶ Iniciar</button>
+          <button class="btn-done" onclick="markExerciseDone('${ex.id}','${type}')">
+            ${isDone ? '✓ Hecho' : 'Completado'}
+          </button>
+        </div>
+      </div>`;
   });
+
+  html += `
+    <button class="btn btn-primary" style="${type==='pm'?'background:var(--orange);box-shadow:0 0 16px rgba(255,107,43,.3)':''};margin-top:8px"
+      onclick="completeSession('${type}')">
+      ✅ Finalizar sesión ${type.toUpperCase()}
+    </button>`;
+
+  container.innerHTML = html;
 }
 
-// Track last rendered exercises to enable partial updates
-let _lastRenderedExIds = '';
-
-function renderExerciseList(exercises, forceRedraw = false) {
-  const list = document.getElementById('today-exercise-list');
-  const newIds = exercises.map(e => e.id + (APP.completedExercises.has(e.id) ? '_done' : '')).join(',');
-
-  // Smart partial update: if only completion state changed, just update individual cards
-  if (!forceRedraw && _lastRenderedExIds.split(',').map(x => x.split('_done')[0]).join(',') === exercises.map(e => e.id).join(',')) {
-    exercises.forEach(ex => {
-      const card = document.getElementById(`ex-card-${ex.id}`);
-      if (!card) return;
-      const isDone = APP.completedExercises.has(ex.id);
-      const wasMarked = card.classList.contains('completed');
-      if (isDone !== wasMarked) {
-        card.className = `exercise-card stagger-item${isDone ? ' completed' : ''}`;
-        const statusEl = card.querySelector('.ex-status');
-        if (statusEl) statusEl.textContent = isDone ? '✓' : '';
-        const doneBtn = card.querySelector('.ex-done-btn');
-        if (doneBtn) doneBtn.textContent = isDone ? '✓ Hecho' : 'Completado';
-      }
-    });
-    _lastRenderedExIds = newIds;
-    updateTodayProgress();
+// ════════════════════════════════════════════════════════════════
+// 10. NUTRITION TAB
+// ════════════════════════════════════════════════════════════════
+function renderNutritionContent(container) {
+  const meals  = getTodayMeals();
+  const sched  = getTodaySchedule();
+  const mealLogs = DB.getMealLogsForDate(getTodayKey());
+  if (!meals) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">Sin plan de alimentación para hoy.</div>';
     return;
   }
 
-  // Full redraw with stagger entrance
-  list.innerHTML = '';
-  _lastRenderedExIds = newIds;
+  const TYPE_LABELS = {
+    pierna:   '🦵 Pierna Hipertrofia',
+    doble:    '⚡ Día Doble (AM + PM)',
+    recovery: '☁️ Recovery',
+    natacion: '🌊 Aguas Abiertas',
+    suave:    '🌿 Activación Suave'
+  };
+  const TYPE_COLORS = {
+    pierna: 'var(--orange)', doble: 'var(--aqua)', recovery: 'var(--purple)',
+    natacion: 'var(--aqua)', suave: 'var(--green)'
+  };
 
-  exercises.forEach((ex, i) => {
-    const isDone = APP.completedExercises.has(ex.id);
-    const card = document.createElement('div');
-    card.className = `exercise-card stagger-item${isDone ? ' completed' : ''}`;
-    card.id = `ex-card-${ex.id}`;
+  const mealItems = [
+    { key: 'desayuno', icon: '🥣', label: 'Desayuno', sub: '≈420 kcal', content: meals.desayuno },
+    { key: 'almuerzo', icon: '🍱', label: 'Tupper 1 — Almuerzo', sub: '≈490 kcal', content: meals.almuerzo },
+    { key: 'snack',    icon: '🍎', label: 'Snack Tarde', sub: '≈210 kcal', content: meals.snack },
+    { key: 'cena',     icon: '🍽️', label: 'Cena', sub: '≈280 kcal', content: meals.cena }
+  ];
 
-    const repStr  = ex.reps ? `${ex.reps} reps` : (ex.duration || '');
-    const setsStr = `${ex.sets} series`;
-    const restStr = ex.rest ? `${ex.rest}s descanso` : '';
-
-    const weight    = APP.exerciseWeights[ex.id];
-    const weightStr = weight ? `${weight} kg` : null;
-
-    card.innerHTML = `
-      <div class="ex-head">
-        <div class="ex-name">
-          <span style="color:var(--text-muted);font-size:11px;margin-right:5px;font-family:var(--font-ui)">${String(i+1).padStart(2,'0')}</span>${ex.name}
+  let html = `
+    <div style="background:linear-gradient(145deg,#0d1f35,#060c14);border-radius:var(--r2);border:1px solid var(--border);padding:16px;margin:0 0 14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-family:var(--font-ui);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--text3);text-transform:uppercase">Hoy · ${sched?.label || ''}</span>
+        <span style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:${TYPE_COLORS[meals.type] || 'var(--aqua)'}">
+          ${TYPE_LABELS[meals.type] || ''}
+        </span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-family:var(--font-d);font-size:40px;font-weight:800;letter-spacing:-2px;color:var(--aqua);line-height:1">
+            ${meals.kcal}
+          </div>
+          <div style="font-family:var(--font-ui);font-size:9px;font-weight:700;letter-spacing:2px;color:var(--text3);text-transform:uppercase">kcal objetivo</div>
         </div>
-        <div class="ex-status">${isDone ? '✓' : ''}</div>
+        <div style="text-align:right">
+          <div style="font-family:var(--font-d);font-size:34px;font-weight:800;color:var(--orange);letter-spacing:-1px">${meals.prot}g</div>
+          <div style="font-family:var(--font-ui);font-size:9px;font-weight:700;letter-spacing:2px;color:var(--text3);text-transform:uppercase">proteína objetivo</div>
+        </div>
       </div>
-      <div class="ex-meta">
-        <span style="color:var(--aqua);font-weight:700">${setsStr}</span>
-        <span class="sep">·</span>
-        <span>${repStr}</span>
-        ${restStr ? `<span class="sep">·</span><span>${restStr}</span>` : ''}
+      <div style="margin-top:10px;background:rgba(255,107,43,.08);border:1px solid rgba(255,107,43,.2);border-radius:8px;padding:8px 10px">
+        <div style="font-family:var(--font-ui);font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--orange);text-transform:uppercase;margin-bottom:2px">Ajuste del día</div>
+        <div style="font-family:var(--font-body);font-size:11px;color:var(--text2)">${meals.adjustment}</div>
       </div>
-      <!-- Weight row -->
-      <div class="ex-weight-row">
-        <span class="ex-weight-label">⚖️ Peso:</span>
-        <button class="ex-weight-badge${weightStr ? '' : ' no-weight'}"
-                onclick="toggleWeightEditor('${ex.id}', this)">
-          ${weightStr ? `${weight}<span class="wt-unit">kg</span>` : '+ Añadir peso'}
-        </button>
-      </div>
-      <!-- Inline weight editor (hidden by default) -->
-      <div class="ex-weight-editor" id="wed-${ex.id}">
-        <button class="we-btn" onclick="stepWeight('${ex.id}', -0.5)">−</button>
-        <input type="number" id="wi-${ex.id}" min="0" max="200" step="0.5"
-               value="${weight || ''}" placeholder="kg">
-        <span class="we-unit">KG</span>
-        <button class="we-btn" onclick="stepWeight('${ex.id}', 0.5)">+</button>
-        <button class="we-save" onclick="saveWeight('${ex.id}')">OK</button>
-      </div>
-      <div class="ex-note">${ex.note}</div>
-      <div class="ex-actions">
-        <button class="btn btn-primary btn-sm" style="flex:2" onclick="openTimerModal(${i})">
-          ▶ Iniciar
-        </button>
-        <button class="btn btn-ghost btn-sm ex-done-btn" style="flex:1" onclick="markExerciseDone('${ex.id}')">
-          ${isDone ? '✓ Hecho' : 'Completado'}
-        </button>
-      </div>
-    `;
-    list.appendChild(card);
+    </div>`;
+
+  // Whey section
+  if (meals.whey.length > 0) {
+    const wheyAmDone = mealLogs['whey_am'];
+    const wheyPmDone = mealLogs['whey_pm'];
+    html += `
+      <div style="background:rgba(11,255,240,.06);border:1px solid rgba(11,255,240,.2);border-radius:var(--r2);padding:14px;margin:0 0 14px">
+        <div style="font-family:var(--font-ui);font-size:9px;font-weight:700;letter-spacing:2px;color:var(--aqua);text-transform:uppercase;margin-bottom:8px">🥤 WHEY HOY</div>
+        ${meals.whey.includes('post_am') ? `
+          <div class="meal-check-row" onclick="toggleMeal('whey_am')">
+            <div class="meal-check-box${wheyAmDone?' checked':''}">✓</div>
+            <div>
+              <div style="font-family:var(--font-ui);font-size:13px;font-weight:700;color:var(--text)">Whey post AM · 1 scoop</div>
+              <div style="font-family:var(--font-body);font-size:11px;color:var(--text3)">Con agua, inmediatamente post-entreno</div>
+            </div>
+          </div>` : ''}
+        ${meals.whey.includes('post_pm') ? `
+          <div class="meal-check-row" onclick="toggleMeal('whey_pm')" style="margin-top:8px">
+            <div class="meal-check-box${wheyPmDone?' checked':''}">✓</div>
+            <div>
+              <div style="font-family:var(--font-ui);font-size:13px;font-weight:700;color:var(--text)">Whey post PM gym · 1 scoop</div>
+              <div style="font-family:var(--font-body);font-size:11px;color:var(--text3)">Post gym, con agua</div>
+            </div>
+          </div>` : ''}
+        <div style="font-family:var(--font-body);font-size:11px;color:var(--text3);margin-top:8px;font-style:italic">${meals.whey_note}</div>
+      </div>`;
+  }
+
+  // Meal items
+  mealItems.forEach(m => {
+    const isDone = mealLogs[m.key];
+    html += `
+      <div class="meal-card${isDone?' meal-done':''}">
+        <div class="meal-header" onclick="toggleMeal('${m.key}')">
+          <div class="meal-check-box${isDone?' checked':''}">✓</div>
+          <div style="flex:1">
+            <div style="font-family:var(--font-ui);font-size:14px;font-weight:700;color:var(--text)">${m.icon} ${m.label}</div>
+            <div style="font-family:var(--font-ui);font-size:9px;font-weight:600;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-top:1px">${m.sub}</div>
+          </div>
+        </div>
+        <div class="meal-body">${m.content.replace(/\n/g, '<br>')}</div>
+      </div>`;
   });
+
+  container.innerHTML = html;
 }
 
-// ── Weight per exercise helpers ────────────────────────────
-
-function toggleWeightEditor(exId, btn) {
-  const editor = document.getElementById('wed-' + exId);
-  if (!editor) return;
-  const isOpen = editor.classList.contains('open');
-  // Close all open editors first
-  document.querySelectorAll('.ex-weight-editor.open').forEach(e => e.classList.remove('open'));
-  if (!isOpen) {
-    editor.classList.add('open');
-    const input = document.getElementById('wi-' + exId);
-    if (input) { input.focus(); input.select(); }
-  }
+function toggleMeal(type) {
+  const current = APP.mealCompleted[type];
+  const newVal = !current;
+  APP.mealCompleted[type] = newVal;
+  DB.saveMealLog(getTodayKey(), type, newVal);
+  renderNutritionContent(document.getElementById('today-content'));
 }
 
-function stepWeight(exId, delta) {
-  const input = document.getElementById('wi-' + exId);
-  if (!input) return;
-  const current = parseFloat(input.value) || 0;
-  const next = Math.max(0, Math.round((current + delta) * 2) / 2);
-  input.value = next || '';
-}
-
-function saveWeight(exId) {
-  const input = document.getElementById('wi-' + exId);
-  if (!input) return;
-  const val = parseFloat(input.value);
-  if (val > 0) {
-    APP.exerciseWeights[exId] = val;
-  } else {
-    delete APP.exerciseWeights[exId];
-  }
+// ════════════════════════════════════════════════════════════════
+// 11. EXERCISE CARD ACTIONS
+// ════════════════════════════════════════════════════════════════
+function markExerciseDone(exId, type = 'am') {
+  const set = APP.completedExercises[type];
+  if (set.has(exId)) set.delete(exId); else set.add(exId);
   saveToStorage();
-  // Close editor and refresh card
-  _lastRenderedExIds = '';
-  renderExerciseList(APP.currentRoutineExercises, true);
-  showToast(val > 0 ? `⚖️ ${val} kg guardado` : 'Peso eliminado');
+
+  const card = document.getElementById(`ex-card-${type}-${exId}`);
+  if (card) {
+    const isDone = set.has(exId);
+    card.className = `exercise-card stagger-item${isDone?' completed':''}`;
+    const status = card.querySelector('.ex-status');
+    if (status) status.textContent = isDone ? '✓' : '';
+    const doneBtn = card.querySelector('.btn-done');
+    if (doneBtn) doneBtn.textContent = isDone ? '✓ Hecho' : 'Completado';
+  }
+
+  // Update progress
+  const sched   = getTodaySchedule();
+  const session = type === 'am' ? sched?.am : sched?.pm;
+  const exercises = getModifiedExercises(session?.exercises || [], APP.currentMode);
+  const done    = set.size;
+  const total   = exercises.length;
+  const pct     = total > 0 ? Math.round((done/total)*100) : 0;
+  const fillEl  = document.getElementById(`progress-fill-${type}`);
+  if (fillEl) fillEl.style.width = pct + '%';
+
+  if (set.has(exId)) showToast('✓ Completado', 'success');
 }
 
 function updateTodayProgress() {
-  const total = APP.totalExercisesToday;
-  const done  = APP.completedExercises.size;
-  const pct   = total > 0 ? Math.round((done / total) * 100) : 0;
-  const fillEl = document.getElementById('today-progress-fill');
-  const textEl = document.getElementById('today-progress-text');
-  if (fillEl) fillEl.style.width = pct + '%';
-  if (textEl) textEl.textContent = `${done} / ${total}`;
+  ['am','pm'].forEach(type => {
+    const sched = getTodaySchedule();
+    const session = type === 'am' ? sched?.am : sched?.pm;
+    const exercises = getModifiedExercises(session?.exercises || [], APP.currentMode);
+    const done = APP.completedExercises[type].size;
+    const total = exercises.length;
+    const pct = total > 0 ? Math.round((done/total)*100) : 0;
+    const fillEl = document.getElementById(`progress-fill-${type}`);
+    if (fillEl) fillEl.style.width = pct + '%';
+  });
 }
 
-function markExerciseDone(exId) {
-  const wasDone = APP.completedExercises.has(exId);
-  if (wasDone) APP.completedExercises.delete(exId);
-  else         APP.completedExercises.add(exId);
+function completeSession(type) {
+  const sched   = getTodaySchedule();
+  const session = type === 'am' ? sched?.am : sched?.pm;
+  if (!session) return;
 
-  saveToStorage();
+  const exercises = getModifiedExercises(session.exercises || [], APP.currentMode);
+  const exDone    = APP.completedExercises[type].size;
+  const exTotal   = exercises.length;
+  const plannedSeries = exercises.reduce((s, e) => s + e.sets, 0);
+  const duration = parseInt(session.duration) || 25;
 
-  // Smart update: only patch the card, skip full re-render
-  const exercises = APP.currentRoutineExercises;
-  if (exercises.length > 0) {
-    renderExerciseList(exercises); // uses partial-update path internally
-  }
-
-  // Show toast only when marking as done (not undoing)
-  if (!wasDone) showToast('✓ Completado', 'success');
-
-  updateTodayProgress();
-}
-
-function completeRoutine() {
-  const routine = getTodayRoutine();
-  const exercises = APP.currentRoutineExercises;
-  const exDone = APP.completedExercises.size;
-
-  const plannedSets = exercises.reduce((s, e) => s + e.sets, 0);
-
-  const session = {
-    id: 'session_' + Date.now(),
-    date: getTodayKey(),
-    routineName: routine.name,
-    sessionType: 'casa',
+  const sessionData = {
+    date:         getTodayKey(),
+    type:         type.toUpperCase(),
+    routineName:  session.name,
+    duration,
+    exDone,
+    exTotal,
+    series: Math.round(plannedSeries * (exDone / Math.max(exTotal, 1))),
     energy: 3,
-    minutesTracker: parseInt(routine.duration) || 25,
-    seriesCompleted: Math.round(plannedSets * (exDone / (exercises.length || 1))),
-    exercisesCompleted: exDone,
-    exercisesTotal: exercises.length,
-    routineCompleted: exDone >= exercises.length * 0.8,
-    pain: 'ninguna',
-    notes: '',
-    scoreData: null
+    score:  0,
+    notes:  ''
   };
-  const scoreData = calculateScore(session);
-  session.scoreData = scoreData;
-  session.score = scoreData.total;
+  sessionData.score = calculateScore({
+    type:        sessionData.type,
+    exTotal:     sessionData.exTotal,
+    exCompleted: sessionData.exDone,
+    series:      sessionData.series,
+    duration:    sessionData.duration,
+    energy:      sessionData.energy
+  });
 
-  APP.sessions = APP.sessions.filter(s => s.date !== getTodayKey());
-  APP.sessions.push(session);
-  saveToStorage();
-
-  showToast(`¡Sesión guardada! Score: ${session.score}`, 'success');
+  DB.saveSession(sessionData);
+  showToast(`✅ Sesión ${type.toUpperCase()} guardada · Score: ${sessionData.score}`, 'success');
   navigateTo('dashboard');
 }
 
-// Mode selector (in today page)
 function setTodayMode(mode) {
   APP.currentMode = mode;
-  _lastRenderedExIds = ''; // force full redraw on mode change
+  _lastRenderedExIds = '';
   document.querySelectorAll('[data-mode]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.mode === mode);
   });
-  renderExerciseList(getModifiedExercises(getTodayRoutine().exercises, mode), true);
+  renderTodayContent();
 }
 
-// ═══════════════════════════════════════════════════════════
-// 9. TIMER MODAL
-// ═══════════════════════════════════════════════════════════
-//
-// MÁQUINA DE ESTADOS:
-//
-//  idle ──[Iniciar serie]──► work ──[Completar serie]──► rest_running
-//                              ▲                              │
-//                              │                    (cuenta regresiva)
-//                              │                              │
-//                              │                       rest_done
-//                              │                    (botón habilitado)
-//                              └──[Completar descanso]────────┘
-//
-//  Si ya se hicieron todas las series → done (ejercicio completado)
-//
-// ═══════════════════════════════════════════════════════════
-
-// Guarda el total de segundos de descanso del ejercicio actual
-// para poder mostrar el arco del círculo izquierdo durante el countdown
-let REST_TOTAL_SECS = 0;
-
+// ════════════════════════════════════════════════════════════════
+// 12. TIMER MODAL
+// ════════════════════════════════════════════════════════════════
 function stopTimer() {
   clearInterval(APP.timerInterval);
   APP.timerInterval = null;
   APP.timerRunning = false;
 }
 
-function openTimerModal(exerciseIndex) {
-  const exercises = APP.currentRoutineExercises;
+function openTimerModal(exerciseIndex, sessionType = 'am') {
+  const sched   = getTodaySchedule();
+  const session = sessionType === 'am' ? sched?.am : sched?.pm;
+  const exercises = getModifiedExercises(session?.exercises || [], APP.currentMode);
   if (exerciseIndex >= exercises.length) return;
 
   stopTimer();
+  APP.currentTimerSession    = sessionType;
+  APP.currentExerciseIndex   = exerciseIndex;
+  APP.currentExercise        = exercises[exerciseIndex];
+  APP.currentRoutineExercises = exercises;
+  APP.currentSeriesCount     = 0;
+  APP.timerSeconds           = 0;
+  APP.timerState             = 'idle';
+  REST_TOTAL_SECS            = 0;
 
-  APP.currentExerciseIndex = exerciseIndex;
-  APP.currentExercise     = exercises[exerciseIndex];
-  APP.currentSeriesCount  = 0;
-  APP.timerSeconds        = 0;
-  APP.timerState          = 'idle'; // idle | work | rest_running | rest_done | done
-  REST_TOTAL_SECS         = 0;
+  // Style modal for AM/PM
+  const modal = document.getElementById('timer-modal');
+  modal.classList.remove('hidden');
+  modal.classList.toggle('pm-modal', sessionType === 'pm');
 
-  // Load weight for this exercise
-  const exId  = APP.currentExercise.id;
-  const kg    = APP.exerciseWeights[exId];
+  // Load saved weight
+  const savedW = DB.getWeight(APP.currentExercise.id);
   const wInput = document.getElementById('modal-weight-input');
-  const wHint  = document.getElementById('modal-weight-hint');
-  if (wInput) wInput.value = kg || '';
-  if (wHint)  wHint.textContent = kg ? `Última vez: ${kg} kg` : 'Sin registro previo';
+  if (wInput) {
+    wInput.value = savedW || '';
+    document.getElementById('modal-weight-hint').textContent =
+      savedW > 0 ? `Último peso: ${savedW} kg ✓` : 'Sin registro previo';
+  }
 
   updateTimerModal();
-  document.getElementById('timer-modal').classList.remove('hidden');
 }
 
 function updateTimerModal() {
   const ex  = APP.currentExercise;
-  const idx = APP.currentExerciseIndex;
+  if (!ex) return;
   const exercises = APP.currentRoutineExercises;
+  const idx = APP.currentExerciseIndex;
+  const type = APP.currentTimerSession;
 
-  // ── Textos de cabecera ──────────────────────────────────
-  document.getElementById('modal-ex-order').textContent =
-    `Ejercicio ${idx + 1} de ${exercises.length}`;
-  document.getElementById('modal-ex-name').textContent = ex.name;
-
+  document.getElementById('modal-ex-order').textContent  = `Ejercicio ${idx+1} de ${exercises.length}`;
+  document.getElementById('modal-ex-name').textContent   = ex.name;
   const repStr = ex.reps ? `${ex.reps} reps` : (ex.duration || '');
-  document.getElementById('modal-ex-target').textContent =
-    `${ex.sets} series · ${repStr}`;
-  document.getElementById('modal-rest-val').textContent =
-    ex.rest ? `${ex.rest}s` : '—';
-  document.getElementById('modal-reps-val').textContent = repStr;
-  document.getElementById('modal-ex-progress').textContent =
-    `${idx + 1}/${exercises.length}`;
+  document.getElementById('modal-ex-target').textContent = `${ex.sets} series · ${repStr}`;
+  document.getElementById('modal-rest-val').textContent  = ex.rest ? `${ex.rest}s` : '—';
+  document.getElementById('modal-reps-val').textContent  = repStr;
+  document.getElementById('modal-ex-progress').textContent = `${idx+1}/${exercises.length}`;
 
-  // ── Círculo derecho: series ─────────────────────────────
+  // Session badge
+  const sessEl = document.getElementById('modal-session-badge');
+  if (sessEl) {
+    sessEl.className  = `session-pill ${type}`;
+    sessEl.textContent = type === 'am' ? '☀️ AM' : '🌙 PM';
+  }
+
+  // Series circle
+  const CIRC = 415;
   document.getElementById('series-current').textContent = APP.currentSeriesCount;
   document.getElementById('series-total').textContent   = ex.sets;
-
-  // r=66 → circumference = 2π×66 ≈ 415
-  const CIRC = 415;
   const seriesPct = APP.currentSeriesCount / ex.sets;
-  document.getElementById('series-fill').style.strokeDashoffset =
-    CIRC - CIRC * seriesPct;
+  document.getElementById('series-fill').style.strokeDashoffset = CIRC - CIRC * seriesPct;
 
-  // Pulse ring on series circle
-  const seriesCircle = document.getElementById('series-circle');
-  seriesCircle.classList.remove('is-working', 'is-resting');
-  if (APP.timerState === 'work') seriesCircle.classList.add('is-working');
-
-  // ── Círculo izquierdo: timer ────────────────────────────
-  document.getElementById('timer-display').textContent =
-    formatTime(Math.max(0, APP.timerSeconds));
-
+  // Timer circle
+  document.getElementById('timer-display').textContent = formatTime(Math.max(0, APP.timerSeconds));
   const timerFill   = document.getElementById('timer-fill');
   const timerCircle = document.getElementById('timer-circle');
-  timerCircle.classList.remove('is-working', 'is-resting');
+  const seriesCircle = document.getElementById('series-circle');
+  timerCircle.classList.remove('is-working','is-resting');
+  seriesCircle.classList.remove('is-working');
 
-  if ((APP.timerState === 'rest_running' || APP.timerState === 'rest_done') &&
-      REST_TOTAL_SECS > 0) {
+  if (['rest_running','rest_done'].includes(APP.timerState) && REST_TOTAL_SECS > 0) {
     const restPct = Math.max(0, APP.timerSeconds) / REST_TOTAL_SECS;
     timerFill.style.strokeDashoffset = CIRC - CIRC * restPct;
-    timerFill.classList.remove('aqua');
-    timerFill.classList.add('orange');
+    timerFill.classList.replace('aqua','orange');
     timerCircle.classList.add('is-resting');
   } else {
     timerFill.style.strokeDashoffset = 0;
-    timerFill.classList.remove('orange');
-    timerFill.classList.add('aqua');
+    timerFill.classList.replace('orange','aqua');
     if (APP.timerState === 'work') timerCircle.classList.add('is-working');
   }
+  if (APP.timerState === 'work') seriesCircle.classList.add('is-working');
 
-  // ── Badge de estado ────────────────────────────────────
+  // State badge
   const badge = document.getElementById('modal-state-badge');
   const STATES = {
-    idle:         { cls: 'work',  label: 'LISTO',    pulse: false },
-    work:         { cls: 'work',  label: 'TRABAJO',  pulse: true  },
-    rest_running: { cls: 'rest',  label: 'DESCANSO', pulse: true  },
-    rest_done:    { cls: 'rest',  label: '¡LISTO!',  pulse: false },
-    done:         { cls: 'done',  label: 'COMPLETADO', pulse: false }
+    idle:         {cls:'work',  label:'LISTO',    pulse:false},
+    work:         {cls:'work',  label:'TRABAJO',  pulse:true},
+    rest_running: {cls:'rest',  label:'DESCANSO', pulse:true},
+    rest_done:    {cls:'rest',  label:'¡LISTO!',  pulse:false},
+    done:         {cls:'done',  label:'COMPLETADO',pulse:false}
   };
   const st = STATES[APP.timerState] || STATES.idle;
   badge.className = `state-badge ${st.cls}`;
-  badge.innerHTML = `<div class="state-indicator"${st.pulse ? '' : ' style="animation:none;opacity:0.4"'}></div>${st.label}`;
+  badge.innerHTML = `<div class="state-indicator"${st.pulse?'':' style="animation:none;opacity:.4"'}></div>${st.label}`;
 
-  // ── Botones ────────────────────────────────────────────
-  const btnStart       = document.getElementById('modal-btn-start');
-  const btnCompleteSet = document.getElementById('modal-btn-complete-set');
-  const btnRest        = document.getElementById('modal-btn-rest');
+  // Buttons
+  const btnStart  = document.getElementById('modal-btn-start');
+  const btnCompl  = document.getElementById('modal-btn-complete-set');
+  const btnRest   = document.getElementById('modal-btn-rest');
+  const isPM      = type === 'pm';
 
-  // Reset visual por defecto
-  btnStart.disabled       = false;
-  btnCompleteSet.disabled = true;
-  btnRest.disabled        = true;
-  btnRest.textContent     = '⏸ Iniciar descanso';
+  btnStart.className = `btn btn-primary${isPM ? ' pm-btn' : ''}`;
+  btnCompl.className = `btn btn-orange`;
+  btnRest.disabled   = true;
+  btnRest.textContent = '⏸ Iniciar descanso';
 
-  switch (APP.timerState) {
-
-    case 'idle':
-      btnStart.textContent     = '▶ Iniciar serie';
-      btnCompleteSet.disabled  = true;
-      btnRest.disabled         = true;
-      break;
-
-    case 'work':
-      btnStart.textContent     = APP.timerRunning ? '⏸ Pausar' : '▶ Continuar';
-      btnCompleteSet.disabled  = false;   // ← habilita "Completar serie"
-      btnRest.disabled         = true;
-      break;
-
-    case 'rest_running':
-      btnStart.textContent     = APP.timerRunning ? '⏸ Pausar descanso' : '▶ Continuar descanso';
-      btnCompleteSet.disabled  = true;
-      btnRest.disabled         = true;    // ← "Completar descanso" deshabilitado mientras corre
-      btnRest.textContent      = '⏳ Completar descanso';
-      break;
-
-    case 'rest_done':
-      btnStart.disabled        = true;    // ← no se puede "iniciar" durante rest_done
-      btnStart.textContent     = '⏸ Pausar descanso';
-      btnCompleteSet.disabled  = true;
-      btnRest.disabled         = false;   // ← ¡SE HABILITA! pulsa para cerrar descanso
-      btnRest.textContent      = '✓ Completar descanso';
-      break;
-
-    case 'done':
-      btnStart.disabled        = true;
-      btnStart.textContent     = '✓ Ejercicio listo';
-      btnCompleteSet.disabled  = true;
-      btnRest.disabled         = true;
-      break;
+  if (APP.timerState === 'idle') {
+    btnStart.textContent = '▶ Iniciar serie'; btnStart.disabled = false;
+    btnCompl.disabled = true;
+  } else if (APP.timerState === 'work') {
+    btnStart.textContent = APP.timerRunning ? '⏸ Pausar' : '▶ Continuar'; btnStart.disabled = false;
+    btnCompl.disabled = false;
+  } else if (APP.timerState === 'rest_running') {
+    btnStart.textContent = APP.timerRunning ? '⏸ Pausar descanso' : '▶ Continuar'; btnStart.disabled = false;
+    btnCompl.disabled = true;
+    btnRest.disabled = true; btnRest.textContent = '⏳ Descansando…';
+  } else if (APP.timerState === 'rest_done') {
+    btnStart.disabled = true; btnStart.textContent = '⏸ Pausar descanso';
+    btnCompl.disabled = true;
+    btnRest.disabled = false; btnRest.textContent = '✓ Completar descanso';
+  } else if (APP.timerState === 'done') {
+    btnStart.disabled = true; btnStart.textContent = '✓ Ejercicio listo';
+    btnCompl.disabled = true;
   }
 }
 
-// ── Iniciar / Pausar (solo afecta a work y rest_running) ──
 function startTimer() {
   if (APP.timerState === 'idle') {
-    // Primera pulsación: arranca el cronómetro de trabajo
-    APP.timerState   = 'work';
-    APP.timerSeconds = 0;
-    _runWorkTimer();
-
+    APP.timerState = 'work'; APP.timerSeconds = 0; _runWorkTimer();
   } else if (APP.timerState === 'work') {
-    // Pausar / reanudar
-    if (APP.timerRunning) {
-      stopTimer();
-    } else {
-      _runWorkTimer();
-    }
-
+    APP.timerRunning ? stopTimer() : _runWorkTimer();
   } else if (APP.timerState === 'rest_running') {
-    // Pausar / reanudar el descanso
-    if (APP.timerRunning) {
-      stopTimer();
-    } else {
-      _runRestTimer();
-    }
+    APP.timerRunning ? stopTimer() : _runRestTimer();
   }
-  // En rest_done y done el botón está disabled → no se ejecuta
-
   updateTimerModal();
 }
 
 function _runWorkTimer() {
-  stopTimer();
-  APP.timerRunning = true;
+  stopTimer(); APP.timerRunning = true;
   APP.timerInterval = setInterval(() => {
     APP.timerSeconds++;
-    document.getElementById('timer-display').textContent =
-      formatTime(APP.timerSeconds);
+    document.getElementById('timer-display').textContent = formatTime(APP.timerSeconds);
   }, 1000);
 }
 
 function _runRestTimer() {
-  stopTimer();
-  APP.timerRunning = true;
+  stopTimer(); APP.timerRunning = true;
   APP.timerInterval = setInterval(() => {
     if (APP.timerSeconds <= 0) {
-      // Descanso terminado → rest_done
-      stopTimer();
-      APP.timerSeconds = 0;
-      APP.timerState   = 'rest_done';
+      stopTimer(); APP.timerSeconds = 0; APP.timerState = 'rest_done';
       showToast('⏰ ¡Descanso completado! Pulsa "Completar descanso"', 'success');
-      updateTimerModal();
-      return;
+      updateTimerModal(); return;
     }
     APP.timerSeconds--;
-    document.getElementById('timer-display').textContent =
-      formatTime(Math.max(0, APP.timerSeconds));
-
-    // Actualiza arco del círculo izquierdo (r=66 → CIRC=415)
+    document.getElementById('timer-display').textContent = formatTime(Math.max(0, APP.timerSeconds));
     if (REST_TOTAL_SECS > 0) {
       const CIRC = 415;
-      const restPct = APP.timerSeconds / REST_TOTAL_SECS;
-      document.getElementById('timer-fill').style.strokeDashoffset =
-        CIRC - CIRC * restPct;
+      document.getElementById('timer-fill').style.strokeDashoffset = CIRC - CIRC * (APP.timerSeconds / REST_TOTAL_SECS);
     }
   }, 1000);
 }
 
-// ── Reiniciar cronómetro (solo timer de trabajo) ──────────
 function resetTimer() {
-  if (APP.timerState === 'rest_running' || APP.timerState === 'rest_done') return;
-  stopTimer();
-  APP.timerSeconds = 0;
-  APP.timerState   = 'idle';
+  if (['rest_running','rest_done'].includes(APP.timerState)) return;
+  stopTimer(); APP.timerSeconds = 0; APP.timerState = 'idle';
   document.getElementById('timer-display').textContent = '00:00';
   document.getElementById('timer-fill').style.strokeDashoffset = '0';
   updateTimerModal();
 }
 
-// ── Completar serie ───────────────────────────────────────
 function completeSet() {
   if (APP.timerState !== 'work') return;
+  stopTimer(); APP.currentSeriesCount++;
 
-  stopTimer();
-  APP.currentSeriesCount++;
+  // Weight auto-save
+  const wInput = document.getElementById('modal-weight-input');
+  const wVal = parseFloat(wInput?.value);
+  if (wVal > 0) DB.saveWeight(APP.currentExercise.id, wVal);
 
-  // Bump animation on series circle number
-  const seriesNum = document.getElementById('series-current');
-  if (seriesNum) {
-    seriesNum.classList.remove('series-bump');
-    void seriesNum.offsetWidth; // force reflow
-    seriesNum.classList.add('series-bump');
-    seriesNum.textContent = APP.currentSeriesCount;
+  // Bump animation
+  const numEl = document.getElementById('series-current');
+  if (numEl) {
+    numEl.classList.remove('series-bump'); void numEl.offsetWidth;
+    numEl.classList.add('series-bump'); numEl.textContent = APP.currentSeriesCount;
   }
-
-  // Actualiza el arco de series inmediatamente
   const CIRC = 415;
-  const seriesPct = APP.currentSeriesCount / APP.currentExercise.sets;
   document.getElementById('series-fill').style.strokeDashoffset =
-    CIRC - CIRC * seriesPct;
+    CIRC - CIRC * (APP.currentSeriesCount / APP.currentExercise.sets);
 
   if (APP.currentSeriesCount >= APP.currentExercise.sets) {
-    // ── Todas las series completadas ──
     APP.timerState = 'done';
-    markExerciseDone(APP.currentExercise.id);
+    markExerciseDone(APP.currentExercise.id, APP.currentTimerSession);
     showToast('🎯 ¡Ejercicio completado!', 'success');
-    updateTimerModal();
-
   } else {
-    // ── Quedan series: iniciar countdown de descanso ──
     const restSecs = APP.currentExercise.rest || 60;
-    REST_TOTAL_SECS  = restSecs;
-    APP.timerSeconds = restSecs;
-    APP.timerState   = 'rest_running';
-
+    REST_TOTAL_SECS = restSecs; APP.timerSeconds = restSecs;
+    APP.timerState  = 'rest_running';
     document.getElementById('timer-display').textContent = formatTime(restSecs);
-    document.getElementById('timer-fill').classList.remove('aqua');
-    document.getElementById('timer-fill').classList.add('orange');
-
-    showToast(`Serie ${APP.currentSeriesCount}/${APP.currentExercise.sets} ✓ — Descansando ${restSecs}s`);
-    updateTimerModal();
+    document.getElementById('timer-fill').classList.replace('aqua','orange');
+    showToast(`Serie ${APP.currentSeriesCount}/${APP.currentExercise.sets} ✓ · Descansando ${restSecs}s`);
     _runRestTimer();
   }
+  updateTimerModal();
 }
 
-// ── Completar descanso (solo en rest_done) ────────────────
 function completeRest() {
   if (APP.timerState !== 'rest_done') return;
-
-  stopTimer();
-  // Resetea todo al estado idle listo para la siguiente serie
-  APP.timerSeconds = 0;
-  REST_TOTAL_SECS  = 0;
-  APP.timerState   = 'idle';
-
-  // Resetea visualmente el círculo izquierdo a aqua/lleno
-  const timerFill = document.getElementById('timer-fill');
-  timerFill.style.strokeDashoffset = '0';
-  timerFill.classList.remove('orange');
-  timerFill.classList.add('aqua');
-
+  stopTimer(); APP.timerSeconds = 0; REST_TOTAL_SECS = 0; APP.timerState = 'idle';
+  const fill = document.getElementById('timer-fill');
+  fill.style.strokeDashoffset = '0'; fill.classList.replace('orange','aqua');
   document.getElementById('timer-display').textContent = '00:00';
   showToast('▶ ¡A por la siguiente serie!', 'success');
   updateTimerModal();
@@ -1427,794 +1397,480 @@ function completeRest() {
 
 function nextExercise() {
   stopTimer();
-  const nextIdx = APP.currentExerciseIndex + 1;
-  if (nextIdx < APP.currentRoutineExercises.length) {
-    openTimerModal(nextIdx);
-  } else {
-    document.getElementById('timer-modal').classList.add('hidden');
-    showToast('🎉 ¡Rutina completada!', 'success');
-  }
+  const next = APP.currentExerciseIndex + 1;
+  if (next < APP.currentRoutineExercises.length) openTimerModal(next, APP.currentTimerSession);
+  else { document.getElementById('timer-modal').classList.add('hidden'); showToast('🎉 ¡Rutina completada!', 'success'); }
 }
 
 function closeTimerModal() {
-  stopTimer();
-  document.getElementById('timer-modal').classList.add('hidden');
-  renderToday();
+  stopTimer(); document.getElementById('timer-modal').classList.add('hidden');
+  _lastRenderedExIds = ''; renderTodayContent();
 }
 
-// ═══════════════════════════════════════════════════════════
-// 10. DASHBOARD
-// ═══════════════════════════════════════════════════════════
-
-// Set a value with a short CSS pop animation on the element
+// ════════════════════════════════════════════════════════════════
+// 13. DASHBOARD
+// ════════════════════════════════════════════════════════════════
 function setVal(id, text) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  if (el.textContent === String(text)) return; // no-op if same
+  const el = document.getElementById(id); if (!el) return;
+  if (el.textContent === String(text)) return;
   el.textContent = text;
-  el.style.transition = 'none';
-  el.style.transform  = 'scale(1.15)';
-  el.style.opacity    = '0.5';
+  el.style.transition = 'none'; el.style.transform = 'scale(1.12)'; el.style.opacity = '0.5';
   requestAnimationFrame(() => {
-    el.style.transition = 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease';
-    el.style.transform  = 'scale(1)';
-    el.style.opacity    = '1';
+    el.style.transition = 'transform .35s cubic-bezier(.34,1.56,.64,1), opacity .3s ease';
+    el.style.transform = 'scale(1)'; el.style.opacity = '1';
   });
 }
-
 function setBar(id, pct) {
   const el = document.getElementById(id);
   if (el) el.style.width = Math.min(100, Math.max(0, pct)) + '%';
 }
 
-// Weekly cumulative stats
-function getWeeklyScore() {
-  const today = new Date();
-  const todayDow = today.getDay();
-  let total = 0, count = 0, best = 0;
-
-  for (let i = 0; i <= todayDow; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - todayDow + i);
-    const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
-    const key = `${y}-${m}-${dd}`;
-    const session = APP.sessions.find(s => s.date === key);
-    if (session && session.score > 0) {
-      total += session.score;
-      count++;
-      if (session.score > best) best = session.score;
-    }
-  }
-  return {
-    avg:   count > 0 ? Math.round(total / count) : 0,
-    total: Math.round(total),
-    best,
-    count
-  };
-}
-
 function renderDashboard() {
   try {
-    const todaySession = getTodaySession();
-    const streak       = getStreak();
-    const weekStats    = getWeekStats();
-    const weekScore    = getWeeklyScore();
-    const routine      = getTodayRoutine();
-    const exercises    = getModifiedExercises(routine.exercises || [], APP.currentMode);
+    const todaySessions = getTodaySessionsData();
+    const amSess = todaySessions.find(s => s.session_type === 'AM');
+    const pmSess = todaySessions.find(s => s.session_type === 'PM');
+    const bestSess = todaySessions.reduce((b, s) => (s.score||0) > (b?.score||0) ? s : b, null);
+    const score = bestSess?.score || 0;
+    const streak = getStreak();
+    const weekStats = getWeekStats();
+    const weekScore = getWeeklyScore();
+    const sched = getTodaySchedule();
+    const amExs = getModifiedExercises(sched?.am?.exercises || [], APP.currentMode);
+    const pmExs = getModifiedExercises(sched?.pm?.exercises || [], APP.currentMode);
 
-    // ── Score hoy ───────────────────────────────────────────
-    // Compatibilidad: score puede ser número directo o estar en scoreData.total
-    const rawScore  = todaySession
-      ? (todaySession.scoreData?.total ?? todaySession.score ?? 0)
-      : 0;
-    const score      = Math.min(100, Math.max(0, Math.round(rawScore)));
-    const scoreLabel = todaySession ? getScoreLabel(score) : 'Sin sesión aún';
-    const scoreColor = getScoreColor(score);
-
-    // ── Círculo principal ────────────────────────────────────
-    const CIRC_MAIN = 578; // 2π × 92
-    const offset    = CIRC_MAIN - (CIRC_MAIN * score / 100);
+    // Main score circle
+    const CIRC = 578;
     const fill = document.getElementById('main-score-fill');
     if (fill) {
-      fill.className = `fill ${scoreColor}`;
-      // Forzar reflow para que la transición se dispare desde 578
-      fill.style.transition = 'none';
-      fill.style.strokeDashoffset = CIRC_MAIN;
+      fill.className = `fill ${getScoreColor(score)}`;
+      fill.style.transition = 'none'; fill.style.strokeDashoffset = CIRC;
       requestAnimationFrame(() => {
-        fill.style.transition = 'stroke-dashoffset 1.4s cubic-bezier(0.22, 0.61, 0.36, 1)';
-        fill.style.strokeDashoffset = offset;
+        fill.style.transition = 'stroke-dashoffset 1.4s cubic-bezier(.22,.61,.36,1)';
+        fill.style.strokeDashoffset = CIRC - CIRC * score / 100;
       });
     }
-
-    // Número del score
     const numEl = document.getElementById('main-score-num');
-    if (numEl) {
-      numEl.textContent  = score > 0 ? score : '—';
-      numEl.style.color  = `var(--${scoreColor})`;
-    }
-
+    if (numEl) { numEl.textContent = score > 0 ? score : '—'; numEl.style.color = `var(--${getScoreColor(score)})`; }
     const statusEl = document.getElementById('dash-score-status');
-    if (statusEl) {
-      statusEl.textContent = scoreLabel;
-      statusEl.style.color = score > 0 ? `var(--${scoreColor})` : 'var(--aqua)';
-    }
+    if (statusEl) { statusEl.textContent = bestSess ? getScoreLabel(score) : 'Sin sesión aún'; statusEl.style.color = score > 0 ? `var(--${getScoreColor(score)})` : 'var(--aqua)'; }
 
-    // Glow class en la sección
     const section = document.getElementById('dash-score-section');
-    if (section) {
-      section.className = 'dash-score-section'
-        + (score >= 85 ? ' score-high'
-         : score >= 70 ? ' score-good'
-         : score >= 50 ? ' score-med'
-         : score  >  0 ? ' score-low' : '');
-    }
+    if (section) section.className = `dash-score-section${score>=85?' score-high':score>=70?' score-good':score>=50?' score-med':score>0?' score-low':''}`;
 
-    // ── Breakdown de componentes ─────────────────────────────
-    const sd = todaySession?.scoreData || {};
-    const compCompletion = Math.min(35, sd.completion || 0);
-    const compVolume     = Math.min(25, sd.volume     || 0);
-    const compTime       = Math.min(20, sd.time       || 0);
-    const compEnergy     = Math.min(10, sd.energy     || 0);
+    // Session scores row
+    setVal('sc-am-score', amSess?.score || '—');
+    setVal('sc-pm-score', pmSess?.score || '—');
 
-    const compMap = {
-      'sc-completion': { val: compCompletion, max: 35 },
-      'sc-volume':     { val: compVolume,     max: 25 },
-      'sc-time':       { val: compTime,       max: 20 },
-      'sc-energy-comp':{ val: compEnergy,     max: 10 }
-    };
-    Object.entries(compMap).forEach(([id, {val, max}]) => {
-      setVal(id, val);
-      const el = document.getElementById(id);
-      const parent = el?.closest('.score-component');
-      if (parent) {
-        setTimeout(() => parent.style.setProperty('--bar', (val / max * 100) + '%'), 120);
-      }
-    });
-
-    // ── Score semanal acumulado ──────────────────────────────
-    const weekScoreEl = document.getElementById('dc-week-score');
-    if (weekScoreEl) setVal('dc-week-score', weekScore.avg || '—');
-    const weekBestEl = document.getElementById('dc-week-best');
-    if (weekBestEl) setVal('dc-week-best', weekScore.best || '—');
-
-    // ── Frase motivacional ───────────────────────────────────
+    // Phrase
     const phraseEl = document.getElementById('dash-phrase');
     if (phraseEl) phraseEl.textContent = getPhrase(score);
 
-    // ── Métricas del día ────────────────────────────────────
-    const minutes   = todaySession ? (todaySession.minutesTracker || 0) : 0;
-    const targetMin = APP.settings.dailyMinTarget || 25;
-
-    // dc-time: actualizamos SOLO el span interno si existe, si no lo creamos una vez
-    let timeNumEl = document.getElementById('dc-time-num');
-    if (!timeNumEl) {
-      const timeEl = document.getElementById('dc-time');
-      if (timeEl) {
-        timeEl.innerHTML = '<span id="dc-time-num">0</span><span class="dc-unit">min</span>';
-        timeNumEl = document.getElementById('dc-time-num');
-      }
-    }
-    if (timeNumEl) setVal('dc-time-num', minutes);
+    // Metrics
+    const amMin = amSess?.duration_min || 0;
+    const pmMin = pmSess?.duration_min || 0;
+    const totalMin = amMin + pmMin;
+    const targetMin = APP.settings.dailyMinTarget || 35;
+    const timeNumEl = document.getElementById('dc-time-num');
+    if (timeNumEl) setVal('dc-time-num', totalMin);
     const timeSubEl = document.getElementById('dc-time-sub');
     if (timeSubEl) timeSubEl.textContent = `de ${targetMin} min meta`;
-    setTimeout(() => setBar('dc-time-bar', (minutes / targetMin) * 100), 120);
+    setTimeout(() => setBar('dc-time-bar', (totalMin / targetMin) * 100), 120);
 
-    const plannedSets = exercises.reduce((s, e) => s + (e.sets || 0), 0);
-    const series      = todaySession ? (todaySession.seriesCompleted || 0) : 0;
-    setVal('dc-series', series);
+    const plannedSets = [...amExs, ...pmExs].reduce((s,e) => s + (e.sets||0), 0);
+    const doneSeries  = (amSess?.series_completed||0) + (pmSess?.series_completed||0);
+    setVal('dc-series', doneSeries);
     const seriesSubEl = document.getElementById('dc-series-sub');
     if (seriesSubEl) seriesSubEl.textContent = `de ${plannedSets} planificadas`;
-    setTimeout(() => setBar('dc-series-bar', plannedSets > 0 ? (series / plannedSets) * 100 : 0), 160);
+    setTimeout(() => setBar('dc-series-bar', plannedSets > 0 ? (doneSeries/plannedSets)*100 : 0), 160);
 
-    const exDone  = todaySession ? (todaySession.exercisesCompleted || 0) : 0;
-    const exTotal = exercises.length;
-    setVal('dc-exercises', exDone);
+    const amDone = amSess?.exercises_completed || 0;
+    const pmDone = pmSess?.exercises_completed || 0;
+    const amTotal = amExs.length; const pmTotal = pmExs.length;
+    setVal('dc-exercises', amDone + pmDone);
     const exSubEl = document.getElementById('dc-exercises-sub');
-    if (exSubEl) exSubEl.textContent = `de ${exTotal} planificados`;
-    setTimeout(() => setBar('dc-exercises-bar', exTotal > 0 ? (exDone / exTotal) * 100 : 0), 200);
+    if (exSubEl) exSubEl.textContent = `de ${amTotal + pmTotal} planificados`;
+    setTimeout(() => setBar('dc-exercises-bar', (amTotal+pmTotal) > 0 ? ((amDone+pmDone)/(amTotal+pmTotal))*100 : 0), 200);
 
-    // Energy
-    const energy   = todaySession ? (todaySession.energy || 0) : 0;
-    const energyEl = document.getElementById('dc-energy');
-    if (energyEl) {
-      energyEl.textContent = energy || '—';
-      energyEl.style.color = energy >= 4 ? 'var(--green)'
-        : energy >= 3 ? 'var(--yellow)'
-        : energy  >  0 ? 'var(--orange)'
-        : 'var(--text-muted)';
+    // Carga
+    const load = calculateLoad([...amExs, ...pmExs], APP.currentMode);
+    ['suave','moderada','alta'].forEach(c => {
+      const el = document.getElementById('carga-'+c);
+      if (el) el.className = `carga-pill ${c}${load===c?' active':''}`;
+    });
+    const cdEl = document.getElementById('carga-detail');
+    if (cdEl) cdEl.textContent = LOAD_DESC[load];
+
+    // Nutrition progress
+    const meals = getTodayMeals();
+    if (meals) {
+      const mealLogs = DB.getMealLogsForDate(getTodayKey());
+      const keys = ['desayuno','almuerzo','snack','cena',...meals.whey.map(w=>`whey_${w.split('_')[1]}`)];
+      const done = keys.filter(k => mealLogs[k]).length;
+      setVal('dc-meal-pct', Math.round((done/keys.length)*100) + '%');
+      setBar('dc-meal-bar', (done/keys.length)*100);
+      const mealSubEl = document.getElementById('dc-meal-sub');
+      if (mealSubEl) mealSubEl.textContent = `${done} de ${keys.length} comidas ✓`;
     }
-    const energyLabelEl = document.getElementById('dc-energy-label');
-    if (energyLabelEl) energyLabelEl.textContent = energy ? getEnergyLabel(energy) : 'Sin registrar';
-    document.querySelectorAll('.energy-seg').forEach((seg, i) => {
-      seg.classList.toggle('active', i < energy);
-    });
 
-    // ── Carga del día ────────────────────────────────────────
-    const load = calculateLoad(exercises, APP.currentMode);
-    ['suave', 'moderada', 'alta'].forEach(c => {
-      const el = document.getElementById('carga-' + c);
-      if (el) el.className = `carga-pill ${c}${load === c ? ' active' : ''}`;
-    });
-    const cargaDetailEl = document.getElementById('carga-detail');
-    if (cargaDetailEl) cargaDetailEl.textContent = LOAD_DESC[load];
-
-    // ── Racha & semana ───────────────────────────────────────
+    // Streak & week
     setVal('dc-streak', streak);
-    const weekLabelEl = document.getElementById('dc-week-label');
-    if (weekLabelEl) weekLabelEl.textContent = `Esta semana: ${weekStats.daysCompleted}/7 días`;
+    const wlEl = document.getElementById('dc-week-label');
+    if (wlEl) wlEl.textContent = `Esta semana: ${weekStats.completed}/7 días`;
+    const wdEl = document.getElementById('dc-week-dots');
+    if (wdEl) wdEl.innerHTML = getWeekDots().map(d =>
+      `<div class="week-dot${d.done?' done':''}${d.isToday?' today':''}"></div>`).join('');
 
-    const weekDotsEl = document.getElementById('dc-week-dots');
-    if (weekDotsEl) {
-      weekDotsEl.innerHTML = getWeekDots().map(d =>
-        `<div class="week-dot${d.done ? ' done' : ''}${d.isToday ? ' today' : ''}"></div>`
-      ).join('');
-    }
+    // Weekly score
+    setVal('dc-week-score', weekScore.avg || '—');
+    setVal('dc-week-best', weekScore.best || '—');
 
-    // ── Historial 7 días ────────────────────────────────────
-    const SESSION_ICONS = { casa: '🏠', recovery: '☁️', aguas: '🌊' };
-    const historyEl = document.getElementById('dc-history');
-    if (historyEl) {
-      const last7 = getLast7Days();
-      historyEl.innerHTML = last7.map(day => {
+    // 7-day history
+    const ICONS = {AM:'🏠', PM:'🏋️', OW:'🌊'};
+    const histEl = document.getElementById('dc-history');
+    if (histEl) {
+      histEl.innerHTML = getLast7Days().map(day => {
         const s = day.session;
-        const sc = s ? Math.min(100, Math.max(0, s.score || 0)) : 0;
-        const scorePct   = sc + '%';
-        const scoreCol   = s ? `var(--${getScoreColor(sc)})` : 'var(--border)';
-        const icon       = s ? (SESSION_ICONS[s.sessionType] || '🏠') : '·';
-        const isPartial  = s && !s.routineCompleted;
-        return `<div class="history-day${s ? ' done' : ''}${isPartial ? ' partial' : ''}${day.isToday ? ' today' : ''}"
-                     style="--score-pct:${scorePct};--score-color:${scoreCol}">
-                  <div class="hd-day">${day.label}</div>
-                  <div class="hd-icon">${icon}</div>
-                  <div class="hd-score">${s && sc > 0 ? sc : '—'}</div>
-                </div>`;
+        const sc = s ? Math.min(100, Math.max(0, s.score||0)) : 0;
+        return `<div class="history-day${s?' done':''}${day.isToday?' today':''}" style="--score-pct:${sc}%;--score-color:var(--${s?getScoreColor(sc):'text3'})">
+          <div class="hd-day">${day.label}</div>
+          <div class="hd-icon">${s ? (ICONS[s.session_type]||'🏠') : '·'}</div>
+          <div class="hd-score">${s && sc > 0 ? sc : '—'}</div>
+        </div>`;
       }).join('');
     }
 
-    // ── Recomendaciones ──────────────────────────────────────
+    // Recommendations
     const recsEl = document.getElementById('dc-recs');
-    if (recsEl) {
-      const recs = getRecommendations();
-      recsEl.innerHTML = recs.map(r =>
-        `<div class="rec-item"><span class="rec-arrow">→</span>${r}</div>`
-      ).join('');
-    }
+    if (recsEl) recsEl.innerHTML = getRecommendations().map(r =>
+      `<div class="rec-item"><span class="rec-arrow">→</span>${r}</div>`).join('');
 
-  } catch (err) {
-    console.error('[renderDashboard] Error:', err);
-  }
+  } catch(e) { console.error('[Dashboard]', e); }
 }
 
-// ═══════════════════════════════════════════════════════════
-// 11. EXERCISE LIBRARY
-// ═══════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
+// 14. EXERCISE LIBRARY
+// ════════════════════════════════════════════════════════════════
+const EXERCISE_LIBRARY = [
+  {id:'gato-vaca',   name:'Gato-Vaca',categories:['recovery','core'],objetivo:'Movilizar columna, activar core profundo y respiración.',musculos:'Erectores espinales, transverso abdominal',tecnica:'Cuadrupedia: alterna gato (espalda redonda) y vaca (extensión). Coordina con respiración.',errores:'Moverse solo en lumbar, no sincronizar respiración.',dificultad:1,variantes:{facil:'Solo cadera, sin zona cervical.',media:'Pausa 2s en cada extremo.',avanzado:'Carga pequeña en espalda.'},natacion:'Activa ondulación de cadera para mariposa y posición de crol.'},
+  {id:'sentadilla',  name:'Sentadilla con barra',categories:['pierna'],objetivo:'Fuerza global de piernas, hipertrofia cuádriceps y glúteos.',musculos:'Cuádriceps, glúteo mayor, isquiotibiales, core',tecnica:'Pies a ancho de hombros. Baja con tempo 3-1-1: 3 seg bajando, 1 pausa, 1 subiendo. Profundidad mínima: muslos paralelos.',errores:'Valgo de rodillas, talones levantados, espalda redondeada.',dificultad:3,variantes:{facil:'Sentadilla con silla.',media:'Sentadilla libre con barra.',avanzado:'Sentadilla búlgara o pistol squat.'},natacion:'Cadena cinética completa de la pierna. Potencia de patada y posición de cadera en el agua.'},
+  {id:'zancada-b',   name:'Zancada trasera con barra',categories:['pierna','core'],objetivo:'Fuerza unilateral de pierna con estabilidad.',musculos:'Cuádriceps, glúteo mayor, isquiotibiales, core',tecnica:'Paso largo atrás. Rodilla trasera casi toca el suelo. Torso erecto todo el movimiento.',errores:'Rodilla delantera pasa el pie, tronco inclinado.',dificultad:2,variantes:{facil:'Sin barra, manos en cadera.',media:'Con barra sin carga.',avanzado:'Con peso en barra + step para mayor rango.'},natacion:'Cadena posterior de pierna, directamente en la patada de crol.'},
+  {id:'step-up',     name:'Step-up con mancuernas',categories:['pierna','estabilidad'],objetivo:'Fuerza unilateral y equilibrio de cadera.',musculos:'Cuádriceps, glúteos, isquiotibiales',tecnica:'Un pie sobre el banco. Empuja desde ese pie. Rodilla sube a 90°. Baja controlado.',errores:'Impulso del pie de abajo, rodilla cae hacia adentro.',dificultad:2,variantes:{facil:'Altura baja (20 cm).',media:'Altura 40 cm con control.',avanzado:'Mancuernas + pausa 2s arriba.'},natacion:'Imita el rango de la patada de delfín.'},
+  {id:'rdl',         name:'Peso muerto rumano',categories:['pierna'],objetivo:'Isquiotibiales y cadena posterior para completar el ciclo de patada.',musculos:'Isquiotibiales, glúteo mayor, erectores espinales',tecnica:'Cadera atrás, espalda neutra. Baja la barra por las piernas hasta sentir estiramiento en isquios.',errores:'Redondear la espalda, flexionar demasiado las rodillas.',dificultad:2,variantes:{facil:'Solo con mancuernas.',media:'Con barra.',avanzado:'En una sola pierna.'},natacion:'Cadena posterior: complementa la fase de recuperación de la patada.'},
+  {id:'hip-bridge',  name:'Puente de glúteo con barra',categories:['pierna'],objetivo:'Glúteo mayor y fuerza de cadera para la extensión en patada.',musculos:'Glúteo mayor, isquiotibiales, core',tecnica:'Espalda apoyada en banco, barra sobre caderas con toalla. Sube contrayendo glúteo, pausa 1 seg, baja controlado.',errores:'Usar la espalda en lugar del glúteo, no completar extensión.',dificultad:2,variantes:{facil:'Sin barra, solo con peso corporal.',media:'Con barra.',avanzado:'Una sola pierna con barra.'},natacion:'El glúteo es el motor de la patada de crol. Fortalecerlo mejora directamente la propulsión.'},
+  {id:'flutter',     name:'Flutter kicks',categories:['pierna','core','natacion'],objetivo:'Replicar en tierra la patada de crol. Fortalecer cadera y core.',musculos:'Flexores de cadera, recto femoral, core',tecnica:'Tumbado, espalda baja pegada al suelo. Piernas extendidas a 20-30 cm. Movimiento alternado con tobillo activo.',errores:'Lumbar despegada, rodillas flexionadas, pies demasiado altos.',dificultad:2,variantes:{facil:'15 seg, piernas más altas.',media:'30 seg, piernas bajas.',avanzado:'45 seg + brazos sobre la cabeza.'},natacion:'Transferencia directa. Es literalmente el entrenamiento en tierra de la patada de crol.'},
+  {id:'halo',        name:'Halo con mancuerna',categories:['estabilidad','funcional'],objetivo:'Activar serrato anterior, deltoides y mejorar movilidad de hombro.',musculos:'Serrato anterior, deltoides, trapecio, core oblicuo',tecnica:'Mancuerna con ambas manos. Swing lateral + halo completo alrededor de la cabeza. Codos semiflexionados.',errores:'Codos extendidos, perder control sobre la cabeza.',dificultad:2,variantes:{facil:'Solo halo sin swing.',media:'Swing + halo completo.',avanzado:'De pie sobre una pierna.'},natacion:'El serrato anterior es clave en la brazada larga de crol.'},
+  {id:'plank-sh',    name:'Plank shoulder taps',categories:['core','estabilidad'],objetivo:'Estabilidad anti-rotacional del core y fuerza de hombros.',musculos:'Transverso abdominal, oblicuos, deltoides, serrato',tecnica:'Plank en manos. Sin rotar la cadera, lleva una mano al hombro contrario. Alterna.',errores:'Rotar o elevar la cadera, colapsar los hombros.',dificultad:2,variantes:{facil:'Pies separados.',media:'Pies juntos, cadencia lenta.',avanzado:'Peso en muñeca.'},natacion:'Anti-rotación: evita desperdiciar energía en movimientos laterales del torso.'},
+  {id:'serrato-b',   name:'Serrato en barra',categories:['barra','estabilidad','natacion'],objetivo:'Fortalecer el serrato anterior, el músculo de la brazada larga.',musculos:'Serrato anterior, trapecio inferior, romboides',tecnica:'Colgado, sin doblar codos: protracción + depresión de escápulas. Mantén 2 seg.',errores:'Doblar codos (se convierte en dominada), encogerse de hombros.',dificultad:2,variantes:{facil:'Solo bajada de escápulas.',media:'Protracción completa con pausa.',avanzado:'Rotación de pelvis al final.'},natacion:'El serrato es responsable del 30-40% de la potencia de brazada.'},
+  {id:'pushup-b',    name:'Push-up en barra',categories:['barra','estabilidad'],objetivo:'Fuerza de empuje con énfasis en serrato anterior.',musculos:'Pectoral, tríceps, serrato anterior, deltoides, core',tecnica:'Con la barra, baja el pecho en 3 seg. Codos a 45°. Al subir, protracción de escápulas al final.',errores:'Codos a 90°, no completar protracción.',dificultad:2,variantes:{facil:'Push-up de rodillas.',media:'Push-up completo.',avanzado:'Pausa 2s abajo + protracción exagerada.'},natacion:'La protracción activa el serrato que usas en la tracción de la brazada.'},
+  {id:'elev-piernas',name:'Elevaciones de piernas en barra',categories:['barra','core','natacion'],objetivo:'Core con énfasis en flexores de cadera. Patrón vertical de patada.',musculos:'Recto abdominal, iliopsoas, oblicuos',tecnica:'Colgado de barra. Eleva piernas manteniendo tensión abdominal. Empieza con rodillas, progresa a piernas rectas.',errores:'Balancear, no controlar la bajada.',dificultad:3,variantes:{facil:'Elevación de rodillas.',media:'Piernas a 45°.',avanzado:'Piernas rectas a 90° + rotación de pelvis.'},natacion:'Entrenamiento del core vertical para la patada de mariposa y posición horizontal en el agua.'},
+  {id:'press-banca',  name:'Press banca con barra',categories:['gym'],objetivo:'Fuerza y volumen de pecho para el físico atlético.',musculos:'Pectoral mayor, tríceps, deltoides anterior',tecnica:'Codos a 45°. Baja la barra hasta tocar el pecho. Sube explotando. Core activo en el banco.',errores:'Codos a 90°, no tocar el pecho, arquear excesivamente.',dificultad:2,variantes:{facil:'Press con mancuernas.',media:'Press banca con barra.',avanzado:'Pausa 2s en el pecho.'},natacion:'Fuerza de empuje que complementa la brazada de braza.'},
+  {id:'press-mil',   name:'Press militar',categories:['gym','estabilidad'],objetivo:'Volumen de hombros. Clave para el físico de nadador.',musculos:'Deltoides (las 3 cabezas), tríceps, trapecio',tecnica:'De pie o sentado. Barra a nivel de clavícula. Sube directo, pasa por delante de la cara. Core activo.',errores:'Arquear la espalda, codos demasiado adelante.',dificultad:2,variantes:{facil:'Press con mancuernas sentado.',media:'Press militar con barra.',avanzado:'Push press con impulso de piernas.'},natacion:'Los hombros fuertes protegen la articulación durante miles de brazadas.'},
+  {id:'elev-lat',    name:'Elevaciones laterales',categories:['gym'],objetivo:'Ancho de hombros. Lo que más se nota visualmente.',musculos:'Deltoides medial, supraespinoso',tecnica:'Pesos moderados. Eleva los brazos lateralmente hasta la altura del hombro. Codos levemente flexionados.',errores:'Impulso del cuerpo, pesos demasiado altos, encogerse de hombros.',dificultad:1,variantes:{facil:'Con bandas elásticas.',media:'Con mancuernas.',avanzado:'Cable lateral raise.'},natacion:'Deltoides medial: fundamental en la recuperación del brazo en crol.'},
+  {id:'fondos',      name:'Fondos en paralelas',categories:['gym'],objetivo:'Tríceps y pecho inferior.',musculos:'Tríceps, pectoral inferior, deltoides anterior',tecnica:'Inclínate levemente adelante para pecho. Baja hasta 90°. Codos cerca del cuerpo para tríceps.',errores:'No bajar suficiente, codos demasiado abiertos.',dificultad:3,variantes:{facil:'Fondos en banco.',media:'Fondos en paralelas sin lastre.',avanzado:'Fondos con lastre.'},natacion:'Tríceps potente: mejora la fase de empuje de la brazada.'},
+  {id:'jalon',       name:'Jalón al pecho agarre ancho',categories:['gym','natacion'],objetivo:'Espalda ancha en V. Latísimo dorsal.',musculos:'Latísimo dorsal, bíceps, romboides, trapecio inferior',tecnica:'Agarre más ancho que hombros. Baja a la clavícula. Escápulas abajo y atrás al final. No jalar por detrás del cuello.',errores:'Codos adelante, no activar escápulas, demasiado peso.',dificultad:2,variantes:{facil:'Jalón con agarre neutro.',media:'Jalón al pecho agarre ancho.',avanzado:'Dominadas libres.'},natacion:'El latísimo es el motor principal de la brazada. El jalón es el mejor ejercicio de gym para natación.'},
+  {id:'remo-pol',    name:'Remo en polea sentado',categories:['gym'],objetivo:'Grosor de espalda y retractores de escápula.',musculos:'Romboides, trapecio medio, bíceps, dorsal',tecnica:'Sentado, espalda recta. Jala hacia el ombligo. Escápulas atrás al final. Controla la vuelta.',errores:'Redondear la espalda, usar impulso del torso.',dificultad:2,variantes:{facil:'Remo con mancuerna.',media:'Remo en polea.',avanzado:'Remo con barra inclinado.'},natacion:'Escápulas fuertes protegen los hombros y mejoran la posición de brazada.'},
+  {id:'dominadas',   name:'Dominadas asistidas o libres',categories:['barra','gym','natacion'],objetivo:'El mejor ejercicio de espalda. Transferencia directa al agua.',musculos:'Latísimo dorsal, bíceps, romboides, serrato',tecnica:'Agarre supino o prono. Baja completamente. Sube controlado activando el dorsal.',errores:'No bajar completo, usar impulso, no activar el dorsal.',dificultad:3,variantes:{facil:'Jalón en máquina.',media:'Dominadas asistidas.',avanzado:'Dominadas con lastre.'},natacion:'Las dominadas replican exactamente el patrón de la brazada. Cada dominada es una brazada más potente.'},
+  {id:'curl-alt',    name:'Curl bíceps alterno',categories:['gym'],objetivo:'Fuerza de bíceps para la tracción en agua.',musculos:'Bíceps braquial, braquial',tecnica:'Codo fijo. Supinación completa al subir. Controla la bajada.',errores:'Balancear el cuerpo, no supinar completamente.',dificultad:1,variantes:{facil:'Curl con banda.',media:'Curl alterno.',avanzado:'Curl inclinado en banco.'},natacion:'Bíceps en la fase de tracción de la brazada.'},
+  {id:'face-pull',   name:'Face pull en polea',categories:['gym','estabilidad'],objetivo:'Salud de hombros. Rotadores externos y trapecio.',musculos:'Deltoides posterior, infraespinoso, trapecio',tecnica:'Polea alta. Jala hacia la cara separando las manos al final. Codos arriba.',errores:'Jalar demasiado pesado, bajar los codos.',dificultad:1,variantes:{facil:'Con banda elástica.',media:'Con polea.',avanzado:'Con pausa 2s al final.'},natacion:'Protege el manguito rotador, fundamental para nadar sin lesiones.'}
+];
 
-let activeFilter = 'all';
-let searchQuery = '';
-
+let activeFilter = 'all', searchQuery = '';
 function renderExerciseLibrary() {
-  const list = document.getElementById('exercise-library-list');
-  const query = searchQuery.toLowerCase();
-
-  const filtered = EXERCISE_LIBRARY.filter(ex => {
-    const matchesFilter = activeFilter === 'all' || ex.categories.includes(activeFilter);
-    const matchesSearch = !query ||
-      ex.name.toLowerCase().includes(query) ||
-      ex.objetivo.toLowerCase().includes(query) ||
-      ex.musculos.toLowerCase().includes(query);
-    return matchesFilter && matchesSearch;
+  const q   = searchQuery.toLowerCase();
+  const list = EXERCISE_LIBRARY.filter(ex => {
+    const mf = activeFilter === 'all' || ex.categories.includes(activeFilter);
+    const ms = !q || ex.name.toLowerCase().includes(q) || ex.objetivo.toLowerCase().includes(q);
+    return mf && ms;
   });
-
-  list.innerHTML = '';
-
-  if (filtered.length === 0) {
-    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);font-family:var(--font-body)">No hay ejercicios que coincidan.</div>';
-    return;
-  }
-
-  filtered.forEach(ex => {
-    const card = document.createElement('div');
-    card.className = 'ex-library-card';
-    card.innerHTML = `
+  const container = document.getElementById('exercise-library-list');
+  if (!container) return;
+  if (!list.length) { container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">Sin resultados.</div>'; return; }
+  container.innerHTML = list.map(ex => `
+    <div class="ex-library-card">
       <div class="elc-name">${ex.name}</div>
-      <div class="elc-cats">${ex.categories.map(c => `<span class="tag ${c}">${c.charAt(0).toUpperCase() + c.slice(1)}</span>`).join('')}</div>
+      <div class="elc-cats">${ex.categories.map(c=>`<span class="tag ${c}">${c}</span>`).join('')}</div>
       <div class="elc-obj">${ex.objetivo}</div>
       <div class="elc-muscles">💪 ${ex.musculos}</div>
-      <div style="margin-top:10px">
-        <button class="btn btn-ghost btn-sm" onclick="toggleExDetail('${ex.id}')">
-          Ver detalles ↓
-        </button>
-      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="toggleExDetail('${ex.id}')">Ver detalles ↓</button>
       <div class="elc-details" id="detail-${ex.id}">
-        <div class="elc-detail-section">
-          <h4>Técnica correcta</h4>
-          <p>${ex.tecnica}</p>
+        <div class="elc-detail-section"><h4>Técnica correcta</h4><p>${ex.tecnica}</p></div>
+        <div class="elc-detail-section"><h4>Errores comunes</h4><p>${ex.errores}</p></div>
+        <div class="variantes">
+          <div class="variante facil"><div class="v-level">🟢 Fácil</div><p>${ex.variantes.facil}</p></div>
+          <div class="variante media"><div class="v-level">🟡 Media</div><p>${ex.variantes.media}</p></div>
+          <div class="variante avanzado"><div class="v-level">🔴 Avanzado</div><p>${ex.variantes.avanzado}</p></div>
         </div>
-        <div class="elc-detail-section">
-          <h4>Errores comunes</h4>
-          <p>${ex.errores}</p>
-        </div>
-        <div class="elc-detail-section">
-          <h4>Variantes</h4>
-          <div class="variantes">
-            <div class="variante facil">
-              <div class="v-level">🟢 Fácil</div>
-              <p>${ex.variantes.facil}</p>
-            </div>
-            <div class="variante media">
-              <div class="v-level">🟡 Media</div>
-              <p>${ex.variantes.media}</p>
-            </div>
-            <div class="variante avanzado">
-              <div class="v-level">🔴 Avanzado</div>
-              <p>${ex.variantes.avanzado}</p>
-            </div>
-          </div>
-        </div>
-        ${ex.natacion ? `
-        <div class="natacion-tag">
-          <div style="font-family:var(--font-ui);font-size:9px;font-weight:700;letter-spacing:2px;color:var(--aqua);margin-bottom:3px">🌊 TRANSFERENCIA A NATACIÓN</div>
-          <p>${ex.natacion}</p>
-        </div>` : ''}
+        ${ex.natacion?`<div class="natacion-tag"><div style="font-family:var(--font-ui);font-size:9px;font-weight:700;letter-spacing:2px;color:var(--aqua);margin-bottom:3px">🌊 TRANSFERENCIA A NATACIÓN</div><p>${ex.natacion}</p></div>`:''}
       </div>
-    `;
-    list.appendChild(card);
-  });
+    </div>`).join('');
 }
-
 function toggleExDetail(id) {
-  const detail = document.getElementById('detail-' + id);
-  if (!detail) return;
-  const isOpen = detail.classList.contains('open');
-  detail.classList.toggle('open', !isOpen);
-  const btn = detail.previousElementSibling.querySelector('button');
-  if (btn) btn.textContent = isOpen ? 'Ver detalles ↓' : 'Ocultar ↑';
+  const d = document.getElementById('detail-'+id); if (!d) return;
+  const open = d.classList.toggle('open');
+  const btn = d.previousElementSibling; if (btn) btn.textContent = open ? 'Ocultar ↑' : 'Ver detalles ↓';
 }
 
-// ═══════════════════════════════════════════════════════════
-// 12. SETTINGS
-// ═══════════════════════════════════════════════════════════
-
+// ════════════════════════════════════════════════════════════════
+// 15. SETTINGS
+// ════════════════════════════════════════════════════════════════
 function renderSettings() {
-  document.getElementById('cfg-name').value = APP.settings.name;
-  document.getElementById('cfg-goal').value = APP.settings.goal;
-  document.getElementById('cfg-daily-min').value = APP.settings.dailyMinTarget;
-  document.getElementById('cfg-daily-series').value = APP.settings.dailySeriesTarget;
+  const n = document.getElementById('cfg-name'); if (n) n.value = APP.settings.name;
+  const g = document.getElementById('cfg-goal'); if (g) g.value = APP.settings.goal;
+  const dm = document.getElementById('cfg-daily-min'); if (dm) dm.value = APP.settings.dailyMinTarget;
+  const ds = document.getElementById('cfg-daily-series'); if (ds) ds.value = APP.settings.dailySeriesTarget;
 
-  // Mode selector
   document.querySelectorAll('[data-cfg-mode]').forEach(btn => {
-    const modeClass = btn.dataset.cfgMode;
-    btn.className = `mode-btn ${modeClass}${APP.settings.mode === modeClass ? ' active' : ''}`;
+    const m = btn.dataset.cfgMode;
+    btn.className = `mode-btn ${m}${APP.settings.mode === m ? ' active' : ''}`;
   });
 
-  const modeDescs = {
-    ligero: 'Sesiones reducidas (60% del volumen). Ideal cuando tienes fatiga o poco tiempo.',
+  const DESCS = {
+    ligero: 'Sesiones reducidas (60% volumen). Ideal con fatiga o poco tiempo.',
     normal: 'Sesiones completas con el volumen recomendado.',
-    intenso: 'Volumen aumentado (130%). Solo úsalo si llevas al menos 2 semanas seguidas.'
+    intenso: 'Volumen aumentado (130%). Solo con 2+ semanas seguidas de base.'
   };
-  document.getElementById('cfg-mode-desc').textContent = modeDescs[APP.settings.mode];
+  const md = document.getElementById('cfg-mode-desc'); if (md) md.textContent = DESCS[APP.settings.mode];
 
-  // Log
+  const ml = document.getElementById('measures-last-date');
+  const measures = DB.getBodyMeasures();
+  if (ml) ml.textContent = measures.length > 0 ? `Última medición: ${measures[0].date}` : 'Sin medidas registradas';
+
   renderSessionLog();
 }
 
 function renderSessionLog() {
-  const log = document.getElementById('sessions-log');
-  if (APP.sessions.length === 0) {
-    log.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);font-family:var(--font-body)">Aún no hay sesiones guardadas.</div>';
+  const log = document.getElementById('sessions-log'); if (!log) return;
+  const sessions = DB.getRecentSessions(10);
+  if (!sessions.length) {
+    log.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text3)">Sin sesiones guardadas.</div>';
     return;
   }
-
-  const sorted = [...APP.sessions].reverse().slice(0, 10);
-  log.innerHTML = sorted.map(s => {
-    const d = new Date(s.date + 'T12:00:00');
-    const dateStr = formatDate(d);
-    return `
-      <div class="log-entry">
-        <div>
-          <div class="le-date">${dateStr}</div>
-          <div class="le-name">${s.routineName}</div>
-          <div class="le-meta">${s.minutesTracker}min · ${s.seriesCompleted} series · Energía ${s.energy}/5</div>
-        </div>
-        <div class="le-score" style="color:var(--${getScoreColor(s.score)})">${s.score}</div>
+  log.innerHTML = sessions.map(s => {
+    const d = s.date ? new Date(s.date+'T12:00:00') : new Date();
+    const score = s.score || 0;
+    return `<div class="log-entry">
+      <div>
+        <div class="le-date">${formatDate(d)}</div>
+        <div class="le-name">${s.routine_name || s.routineName || 'Sesión'}</div>
+        <div class="le-meta">${s.duration_min||s.duration||0}min · ${s.series_completed||s.series||0} series · ${s.session_type||s.type}</div>
       </div>
-    `;
-  }).join('');
-}
-
-function saveSession() {
-  const sessionType = document.querySelector('.session-type-btn.selected')?.dataset.stype || 'casa';
-  const energyBtn = document.querySelector('.energy-btn.selected');
-  const energy = energyBtn ? parseInt(energyBtn.dataset.e) : 3;
-  const minutes = parseInt(document.getElementById('manual-time').value) || 20;
-  const pain = document.getElementById('manual-pain').value || 'ninguna';
-  const notes = document.getElementById('manual-notes').value || '';
-  const routine = getTodayRoutine();
-  const exercises = APP.currentRoutineExercises.length
-    ? APP.currentRoutineExercises : routine.exercises;
-
-  const session = {
-    id: 'session_' + Date.now(),
-    date: getTodayKey(),
-    routineName: routine.name,
-    sessionType,
-    energy,
-    minutesTracker: minutes,
-    seriesCompleted: APP.completedExercises.size * 3,
-    exercisesCompleted: APP.completedExercises.size,
-    exercisesTotal: exercises.length,
-    routineCompleted: minutes >= parseInt(routine.duration) || APP.completedExercises.size >= exercises.length * 0.8,
-    pain,
-    notes,
-    scoreData: null,
-    score: 0
-  };
-  const scoreData = calculateScore(session);
-  session.scoreData = scoreData;
-  session.score = scoreData.total;
-
-  APP.sessions = APP.sessions.filter(s => s.date !== getTodayKey());
-  APP.sessions.push(session);
-  saveToStorage();
-
-  showToast(`✓ Sesión guardada! Score: ${session.score}`, 'success');
-  renderSettings();
-}
-
-// ═══════════════════════════════════════════════════════════
-// 13. TOAST
-// ═══════════════════════════════════════════════════════════
-
-let toastTimeout;
-
-function showToast(msg, type = '') {
-  const toast = document.getElementById('app-toast');
-  if (!toast) return;
-  toast.textContent = msg;
-  toast.className = `toast${type ? ' ' + type : ''} show`;
-  clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => toast.classList.remove('show'), 2800);
-}
-
-// ── Save weight from timer modal ───────────────────────────
-function _saveModalWeight() {
-  if (!APP.currentExercise) return;
-  const inp = document.getElementById('modal-weight-input');
-  const val = parseFloat(inp?.value);
-  const hint = document.getElementById('modal-weight-hint');
-  if (val > 0) {
-    APP.exerciseWeights[APP.currentExercise.id] = val;
-    if (hint) hint.textContent = `Guardado: ${val} kg ✓`;
-  } else {
-    delete APP.exerciseWeights[APP.currentExercise.id];
-    if (hint) hint.textContent = 'Sin registro';
-  }
-  saveToStorage();
-}
-
-// ═══════════════════════════════════════════════════════════
-// MÓDULO DE MEDIDAS CORPORALES
-// ═══════════════════════════════════════════════════════════
-
-const MEASURE_KEYS = ['pecho', 'cintura', 'cadera', 'muslo', 'peso'];
-const MEASURE_LABELS = { pecho: 'Pecho', cintura: 'Cintura', cadera: 'Cadera', muslo: 'Muslo', peso: 'Peso' };
-const MEASURE_UNITS  = { pecho: 'cm', cintura: 'cm', cadera: 'cm', muslo: 'cm', peso: 'kg' };
-// For cintura: smaller = better. For weight: depends. For muslo/pecho: bigger = better (muscle gain)
-const MEASURE_LOWER_IS_BETTER = { pecho: false, cintura: true, cadera: true, muslo: false, peso: true };
-
-function openMeasuresModal() {
-  const modal = document.getElementById('measures-modal');
-  if (!modal) return;
-  modal.classList.remove('hidden');
-  renderMeasuresModal();
-}
-
-function closeMeasuresModal() {
-  const modal = document.getElementById('measures-modal');
-  if (modal) modal.classList.add('hidden');
-}
-
-function renderMeasuresModal() {
-  // Show previous values as hints
-  const last = APP.bodyMeasures.length > 0 ? APP.bodyMeasures[APP.bodyMeasures.length - 1] : null;
-  const prev = APP.bodyMeasures.length > 1 ? APP.bodyMeasures[APP.bodyMeasures.length - 2] : null;
-
-  MEASURE_KEYS.forEach(key => {
-    const input = document.getElementById('m-' + key);
-    const prevEl = document.getElementById('prev-' + key);
-    if (!input || !prevEl) return;
-    // Clear current input for new entry
-    input.value = '';
-    if (last && last[key]) {
-      const unit = MEASURE_UNITS[key];
-      const lowerBetter = MEASURE_LOWER_IS_BETTER[key];
-      if (prev && prev[key]) {
-        const delta = last[key] - prev[key];
-        const improved = lowerBetter ? delta < 0 : delta > 0;
-        const sign = delta > 0 ? '+' : '';
-        const cls = delta === 0 ? 'same' : improved ? 'better' : 'worse';
-        const arrow = delta === 0 ? '→' : improved ? '↓' : '↑';
-        prevEl.className = `measure-prev ${cls}`;
-        prevEl.textContent = `Anterior: ${last[key]}${unit}  ${arrow} ${sign}${delta.toFixed(1)}${unit}`;
-      } else {
-        prevEl.className = 'measure-prev same';
-        prevEl.textContent = `Anterior: ${last[key]}${unit}`;
-      }
-    } else {
-      prevEl.className = 'measure-prev';
-      prevEl.textContent = 'Primera medición';
-    }
-  });
-
-  renderMeasuresHistory();
-}
-
-function saveMeasures() {
-  const entry = { date: getTodayKey() };
-  let hasValue = false;
-
-  MEASURE_KEYS.forEach(key => {
-    const input = document.getElementById('m-' + key);
-    const val = input ? parseFloat(input.value) : null;
-    if (val && val > 0) { entry[key] = val; hasValue = true; }
-    else entry[key] = null;
-  });
-
-  if (!hasValue) {
-    showToast('Ingresa al menos una medida', 'error');
-    return;
-  }
-
-  // Replace today's entry if exists
-  APP.bodyMeasures = APP.bodyMeasures.filter(m => m.date !== getTodayKey());
-  APP.bodyMeasures.push(entry);
-  // Keep only last 52 (1 year weekly)
-  if (APP.bodyMeasures.length > 52) APP.bodyMeasures = APP.bodyMeasures.slice(-52);
-
-  saveToStorage();
-  showToast('📏 Medidas guardadas', 'success');
-
-  // Update settings button subtitle
-  updateMeasuresLastDate();
-  renderMeasuresModal();
-}
-
-function updateMeasuresLastDate() {
-  const el = document.getElementById('measures-last-date');
-  if (!el) return;
-  if (APP.bodyMeasures.length === 0) {
-    el.textContent = 'Sin medidas registradas';
-    return;
-  }
-  const last = APP.bodyMeasures[APP.bodyMeasures.length - 1];
-  const d = new Date(last.date + 'T12:00:00');
-  const vals = MEASURE_KEYS
-    .filter(k => last[k])
-    .map(k => `${MEASURE_LABELS[k]}: ${last[k]}${MEASURE_UNITS[k]}`)
-    .slice(0, 3).join(' · ');
-  el.textContent = `Última: ${formatDate(d)} · ${vals}`;
-}
-
-function renderMeasuresHistory() {
-  const container = document.getElementById('measures-history');
-  if (!container) return;
-
-  if (APP.bodyMeasures.length === 0) {
-    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-family:var(--font-body);font-size:13px">Sin medidas registradas aún.<br>¡Registra tu primera medición!</div>';
-    return;
-  }
-
-  // Show last 8 entries, newest first
-  const entries = [...APP.bodyMeasures].reverse().slice(0, 8);
-  container.innerHTML = entries.map((entry, idx) => {
-    const nextEntry = entries[idx + 1]; // older entry for comparison
-    const d = new Date(entry.date + 'T12:00:00');
-    const dateStr = formatDate(d);
-
-    const itemsHTML = MEASURE_KEYS.filter(k => entry[k]).map(k => {
-      const unit  = MEASURE_UNITS[k];
-      const lowerB = MEASURE_LOWER_IS_BETTER[k];
-      let deltaHTML = '';
-      if (nextEntry && nextEntry[k]) {
-        const delta   = entry[k] - nextEntry[k];
-        const improved = lowerB ? delta < 0 : delta > 0;
-        if (Math.abs(delta) >= 0.1) {
-          const sign = delta > 0 ? '+' : '';
-          const cls  = delta === 0 ? 'same' : improved ? 'down' : 'up';
-          const arrow = improved ? '↓' : '↑';
-          deltaHTML = `<div class="mhe-delta ${cls}">${arrow}${sign}${Math.abs(delta).toFixed(1)}</div>`;
-        }
-      }
-      return `<div class="mhe-item">
-        <div class="mhe-val">${entry[k]}</div>
-        <div class="mhe-lbl">${MEASURE_LABELS[k]}</div>
-        ${deltaHTML}
-      </div>`;
-    }).join('');
-
-    return `<div class="measure-history-entry">
-      <div class="mhe-date">${dateStr}</div>
-      <div class="mhe-grid">${itemsHTML}</div>
+      <div class="le-score" style="color:var(--${getScoreColor(score)})">${score}</div>
     </div>`;
   }).join('');
 }
 
-// ═══════════════════════════════════════════════════════════
-// 14. EVENT LISTENERS
-// ═══════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
+// 16. MEASURES MODAL
+// ════════════════════════════════════════════════════════════════
+function openMeasuresModal() {
+  const modal = document.getElementById('measures-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  const measures = DB.getBodyMeasures();
+  const last = measures[0];
+  const fields = ['pecho','cintura','cadera','muslo','peso'];
+  fields.forEach(f => {
+    const el = document.getElementById(`m-${f}`); if (el) el.value = '';
+    const prev = document.getElementById(`prev-${f}`);
+    if (prev) prev.textContent = last && last[f] ? `Última: ${last[f]}${f==='peso'?'kg':'cm'}` : 'Primera medición';
+  });
+  renderMeasuresHistory();
+}
+function closeMeasuresModal() {
+  document.getElementById('measures-modal')?.classList.add('hidden');
+}
+function saveMeasures() {
+  const fields = ['pecho','cintura','cadera','muslo','peso'];
+  const vals = {};
+  let hasValue = false;
+  fields.forEach(f => {
+    const v = parseFloat(document.getElementById('m-'+f)?.value);
+    if (v > 0) { vals[f] = v; hasValue = true; }
+  });
+  if (!hasValue) { showToast('Ingresa al menos una medida', 'error'); return; }
+  DB.saveBodyMeasure({ date: getTodayKey(), ...vals });
+  showToast('📏 Medidas guardadas', 'success');
+  openMeasuresModal();
+}
+function renderMeasuresHistory() {
+  const container = document.getElementById('measures-history'); if (!container) return;
+  const measures = DB.getBodyMeasures();
+  if (!measures.length) {
+    container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text3);font-size:13px">Sin mediciones previas.</div>';
+    return;
+  }
+  const ICONS = {pecho:'1',cintura:'2',cadera:'3',muslo:'4',peso:'⚖'};
+  const UNITS = {pecho:'cm',cintura:'cm',cadera:'cm',muslo:'cm',peso:'kg'};
+  const COLORS= {pecho:'var(--aqua)',cintura:'var(--aqua)',cadera:'var(--orange)',muslo:'var(--green)',peso:'var(--purple)'};
+  container.innerHTML = measures.map((m, i) => {
+    const prev = measures[i+1];
+    const fields = ['pecho','cintura','cadera','muslo','peso'].filter(f => m[f]);
+    return `<div class="mhe-entry">
+      <div class="mhe-date">${m.date}</div>
+      <div class="mhe-grid">${fields.map(f => {
+        const delta = prev && prev[f] ? m[f] - prev[f] : null;
+        const dCls  = delta === null ? '' : (f==='cintura'||f==='peso') ? (delta < 0 ? 'down' : delta > 0 ? 'up' : 'same') : (delta > 0 ? 'down' : delta < 0 ? 'up' : 'same');
+        const dTxt  = delta !== null ? ` <span class="mhe-delta ${dCls}">${delta>0?'+':''}${delta.toFixed(1)}</span>` : '';
+        return `<div class="mhe-item"><div class="mhe-badge" style="color:${COLORS[f]}">${ICONS[f]}</div><div class="mhe-val" style="color:${COLORS[f]}">${m[f]}</div><div class="mhe-lbl">${f}${dTxt}</div></div>`;
+      }).join('')}</div>
+    </div>`;
+  }).join('');
+}
 
+// ════════════════════════════════════════════════════════════════
+// 17. TOAST
+// ════════════════════════════════════════════════════════════════
+let toastTimeout;
+function showToast(msg, type = '') {
+  const t = document.getElementById('app-toast'); if (!t) return;
+  t.textContent = msg;
+  t.className = `toast${type?' '+type:''} show`;
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ════════════════════════════════════════════════════════════════
+// 18. EVENT LISTENERS
+// ════════════════════════════════════════════════════════════════
 function bindEvents() {
+  // Navigation
+  document.querySelectorAll('[data-page]').forEach(btn =>
+    btn.addEventListener('click', () => navigateTo(btn.dataset.page))
+  );
 
-  // ── Navigation ──
-  document.querySelectorAll('[data-page]').forEach(btn => {
-    btn.addEventListener('click', () => navigateTo(btn.dataset.page));
+  // Session tabs
+  document.querySelectorAll('.stab').forEach(btn =>
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab))
+  );
+
+  // Home buttons
+  document.getElementById('btn-home-am')?.addEventListener('click', () => {
+    APP.currentTab = 'am'; navigateTo('today');
+  });
+  document.getElementById('btn-home-pm')?.addEventListener('click', () => {
+    APP.currentTab = 'pm'; navigateTo('today');
   });
 
-  // ── Home ──
-  document.getElementById('btn-start-routine').addEventListener('click', () => navigateTo('today'));
-  document.getElementById('btn-see-tomorrow').addEventListener('click', () => {
-    showToast(`Mañana: ${getTomorrowRoutine().name}`);
-    const card = document.getElementById('tomorrow-card');
-    card.style.border = '1px solid var(--border-strong)';
-    setTimeout(() => card.style.border = '1px solid var(--border-orange)', 600);
-  });
+  // Mode buttons
+  document.querySelectorAll('[data-mode]').forEach(btn =>
+    btn.addEventListener('click', () => setTodayMode(btn.dataset.mode))
+  );
 
-  // ── Today: mode buttons ──
-  document.querySelectorAll('[data-mode]').forEach(btn => {
-    btn.addEventListener('click', () => setTodayMode(btn.dataset.mode));
-  });
+  // Timer modal
+  document.getElementById('modal-btn-start')?.addEventListener('click', startTimer);
+  document.getElementById('modal-btn-reset')?.addEventListener('click', resetTimer);
+  document.getElementById('modal-btn-complete-set')?.addEventListener('click', completeSet);
+  document.getElementById('modal-btn-rest')?.addEventListener('click', completeRest);
+  document.getElementById('modal-btn-next-ex')?.addEventListener('click', nextExercise);
+  document.getElementById('modal-btn-close')?.addEventListener('click', closeTimerModal);
 
-  // ── Complete routine button ──
-  document.getElementById('btn-complete-routine').addEventListener('click', completeRoutine);
-
-  // ── Measures modal ──
-  document.getElementById('btn-open-measures')?.addEventListener('click', openMeasuresModal);
-  document.getElementById('btn-open-measures-cfg')?.addEventListener('click', openMeasuresModal);
-  document.getElementById('measures-modal-close')?.addEventListener('click', closeMeasuresModal);
-  document.getElementById('btn-save-measures')?.addEventListener('click', saveMeasures);
-  // Close on overlay click
-  document.getElementById('measures-modal')?.addEventListener('click', (e) => {
-    if (e.target === document.getElementById('measures-modal')) closeMeasuresModal();
-  });
-
-  // ── Timer modal ──
-  document.getElementById('modal-btn-start').addEventListener('click', startTimer);
-  document.getElementById('modal-btn-reset').addEventListener('click', resetTimer);
-  document.getElementById('modal-btn-complete-set').addEventListener('click', completeSet);
-
-  // Weight controls in timer modal
-  document.getElementById('modal-weight-minus').addEventListener('click', () => {
+  // Weight +/-
+  document.getElementById('modal-weight-plus')?.addEventListener('click', () => {
     const inp = document.getElementById('modal-weight-input');
-    const v = parseFloat(inp.value) || 0;
-    inp.value = v >= 0.5 ? Math.round((v - 0.5) * 2) / 2 : '';
-    _saveModalWeight();
+    inp.value = Math.max(0, (parseFloat(inp.value)||0) + 0.5);
   });
-  document.getElementById('modal-weight-plus').addEventListener('click', () => {
+  document.getElementById('modal-weight-minus')?.addEventListener('click', () => {
     const inp = document.getElementById('modal-weight-input');
-    const v = parseFloat(inp.value) || 0;
-    inp.value = Math.round((v + 0.5) * 2) / 2;
-    _saveModalWeight();
+    inp.value = Math.max(0, (parseFloat(inp.value)||0) - 0.5);
   });
-  document.getElementById('modal-weight-input').addEventListener('change', _saveModalWeight);
-  // Botón de descanso: en rest_done actúa como "Completar descanso"
-  document.getElementById('modal-btn-rest').addEventListener('click', () => {
-    completeRest();
+  document.getElementById('modal-weight-input')?.addEventListener('change', (e) => {
+    if (APP.currentExercise && parseFloat(e.target.value) > 0)
+      DB.saveWeight(APP.currentExercise.id, parseFloat(e.target.value));
   });
-  document.getElementById('modal-btn-next-ex').addEventListener('click', nextExercise);
-  document.getElementById('modal-btn-close').addEventListener('click', closeTimerModal);
 
-  // ── Exercise library filters ──
-  document.querySelectorAll('.filter-btn').forEach(btn => {
+  // Exercise library filters
+  document.querySelectorAll('.filter-btn').forEach(btn =>
     btn.addEventListener('click', () => {
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeFilter = btn.dataset.filter;
       renderExerciseLibrary();
-    });
+    })
+  );
+  document.getElementById('exercise-search')?.addEventListener('input', e => {
+    searchQuery = e.target.value; renderExerciseLibrary();
   });
 
-  document.getElementById('exercise-search').addEventListener('input', (e) => {
-    searchQuery = e.target.value;
-    renderExerciseLibrary();
-  });
-
-  // ── Settings: mode ──
-  document.querySelectorAll('[data-cfg-mode]').forEach(btn => {
+  // Settings
+  document.querySelectorAll('[data-cfg-mode]').forEach(btn =>
     btn.addEventListener('click', () => {
       APP.settings.mode = btn.dataset.cfgMode;
       APP.currentMode = btn.dataset.cfgMode;
-      saveToStorage();
-      renderSettings();
-      showToast('Modo cambiado: ' + btn.dataset.cfgMode);
+      saveToStorage(); renderSettings();
+      showToast('Modo: ' + btn.dataset.cfgMode);
+    })
+  );
+  ['cfg-name','cfg-goal'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', e => {
+      const key = id.replace('cfg-','');
+      APP.settings[key] = e.target.value; saveToStorage();
     });
   });
-
-  // ── Settings: name/goal ──
-  document.getElementById('cfg-name').addEventListener('input', e => {
-    APP.settings.name = e.target.value;
-    saveToStorage();
+  document.getElementById('cfg-daily-min')?.addEventListener('input', e => {
+    APP.settings.dailyMinTarget = parseInt(e.target.value)||25; saveToStorage();
   });
-  document.getElementById('cfg-goal').addEventListener('input', e => {
-    APP.settings.goal = e.target.value;
-    saveToStorage();
-  });
-  document.getElementById('cfg-daily-min').addEventListener('input', e => {
-    APP.settings.dailyMinTarget = parseInt(e.target.value) || 25;
-    saveToStorage();
-  });
-  document.getElementById('cfg-daily-series').addEventListener('input', e => {
-    APP.settings.dailySeriesTarget = parseInt(e.target.value) || 20;
-    saveToStorage();
+  document.getElementById('cfg-daily-series')?.addEventListener('input', e => {
+    APP.settings.dailySeriesTarget = parseInt(e.target.value)||20; saveToStorage();
   });
 
-  // ── Session type selector ──
-  document.querySelectorAll('.session-type-btn').forEach(btn => {
+  // Session type + energy selectors
+  document.querySelectorAll('.session-type-btn').forEach(btn =>
     btn.addEventListener('click', () => {
       document.querySelectorAll('.session-type-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
-    });
-  });
-
-  // ── Energy selector ──
-  document.querySelectorAll('.energy-btn').forEach(btn => {
+    })
+  );
+  document.querySelectorAll('.energy-btn').forEach(btn =>
     btn.addEventListener('click', () => {
       document.querySelectorAll('.energy-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
-    });
-  });
+    })
+  );
 
-  // ── Save session ──
-  document.getElementById('btn-save-session').addEventListener('click', saveSession);
+  // Measures modal
+  document.getElementById('btn-open-measures')?.addEventListener('click', openMeasuresModal);
+  document.getElementById('btn-open-measures-cfg')?.addEventListener('click', openMeasuresModal);
+  document.getElementById('measures-modal-close')?.addEventListener('click', closeMeasuresModal);
+  document.getElementById('btn-save-measures')?.addEventListener('click', saveMeasures);
 
-  // ── Demo & Clear ──
-  document.getElementById('btn-load-demo').addEventListener('click', loadDemoData);
-  document.getElementById('btn-clear-data').addEventListener('click', () => {
-    if (confirm('¿Borrar todos los datos? Esta acción no se puede deshacer.')) {
-      APP.sessions = [];
-      APP.completedExercises = new Set();
-      localStorage.clear();
-      showToast('Datos borrados', 'error');
-      refreshAllUI();
+  // Settings data actions
+  document.getElementById('btn-clear-data')?.addEventListener('click', () => {
+    if (confirm('¿Borrar todos los datos?')) {
+      APP.sessions = []; APP.bodyMeasures = [];
+      APP.completedExercises = {am:new Set(), pm:new Set()};
+      APP.mealCompleted = {};
+      localStorage.clear(); showToast('Datos borrados', 'error');
+      renderHome();
     }
   });
 }
 
-// ═══════════════════════════════════════════════════════════
-// 15. INIT
-// ═══════════════════════════════════════════════════════════
-
-function refreshAllUI() {
-  if (APP.currentPage === 'home') renderHome();
-  if (APP.currentPage === 'today') renderToday();
-  if (APP.currentPage === 'dashboard') renderDashboard();
-  if (APP.currentPage === 'exercises') renderExerciseLibrary();
-  if (APP.currentPage === 'settings') renderSettings();
-}
-
-function init() {
-  // Register service worker
+// ════════════════════════════════════════════════════════════════
+// 19. INIT
+// ════════════════════════════════════════════════════════════════
+async function init() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./service-worker.js')
-      .then(reg => console.log('[SW] Registered', reg.scope))
-      .catch(err => console.warn('[SW] Failed:', err));
+      .then(r => console.log('[SW] ok', r.scope))
+      .catch(e => console.warn('[SW]', e));
   }
 
-  // Load persisted data
   loadFromStorage();
+  await initDB();
+  DB.loadWeights();
 
-  // Set current day
+  // Load meal completion for today
+  const mealLogs = DB.getMealLogsForDate(getTodayKey());
+  Object.assign(APP.mealCompleted, mealLogs);
+
   APP.currentDayOfWeek = new Date().getDay();
-
-  // Bind all events
   bindEvents();
-
-  // Initial render
   navigateTo('home');
 
-  console.log('🌊 AquaForce Training v1.0 iniciado');
-  console.log(`📅 Hoy: ${new Date().toLocaleDateString('es-PE')} (día ${APP.currentDayOfWeek})`);
-  console.log(`🏋️ Rutina: ${getTodayRoutine().name}`);
+  console.log('🌊 AquaForce v2 ready');
+  console.log(`📅 ${new Date().toLocaleDateString('es-PE')} · Día ${APP.currentDayOfWeek}`);
+  console.log(`🗄️ SQLite: ${APP.dbReady ? '✅' : '⚠️ localStorage fallback'}`);
 }
 
-// ── Bootstrap ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', init);
