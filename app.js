@@ -401,9 +401,11 @@ function normalizeSession(s) {
 
 const DB = {
   saveSession(s) {
-    // Always keep APP.sessions in sync for immediate in-memory fallback
+    // Always update APP.sessions AND persist to localStorage so the
+    // fallback chain works even after a full page reload.
     APP.sessions = APP.sessions.filter(x => !(x.date === s.date && (x.type === s.type || x.session_type === s.type)));
     APP.sessions.push({...s, session_type: s.type});
+    saveToStorage();
 
     if (APP.db) {
       try {
@@ -419,11 +421,10 @@ const DB = {
         saveDB();
         return id;
       } catch(e) {
-        console.warn('[DB.saveSession] SQLite error, falling back to localStorage:', e);
+        console.warn('[DB.saveSession] SQLite error:', e);
       }
     }
-    saveToStorage();
-    return s.id || 'ls_' + Date.now();
+    return 'ls_' + Date.now();
   },
 
   getSessionsForDate(date) {
