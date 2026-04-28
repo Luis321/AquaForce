@@ -1485,7 +1485,7 @@ function renderDashboard() {
     const CIRC = 578;
     const fill = document.getElementById('main-score-fill');
     if (fill) {
-      fill.className = `fill ${getScoreColor(score)}`;
+      fill.setAttribute('class', `fill ${getScoreColor(score)}`);
       fill.style.transition = 'none'; fill.style.strokeDashoffset = CIRC;
       requestAnimationFrame(() => {
         fill.style.transition = 'stroke-dashoffset 1.4s cubic-bezier(.22,.61,.36,1)';
