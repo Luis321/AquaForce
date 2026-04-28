@@ -525,12 +525,16 @@ const DB = {
 
   getMealLogsForDate(date) {
     if (APP.db) {
-      const rows = APP.db.exec(
-        `SELECT meal_type, completed FROM meal_logs WHERE date=?`, [date]
-      );
-      const result = {};
-      if (rows[0]) rows[0].values.forEach(([t, c]) => { result[t] = !!c; });
-      return result;
+      try {
+        const rows = APP.db.exec(
+          `SELECT meal_type, completed FROM meal_logs WHERE date=?`, [date]
+        );
+        const result = {};
+        if (rows[0]) rows[0].values.forEach(([t, c]) => { result[t] = !!c; });
+        return result;
+      } catch(e) {
+        console.warn('[DB.getMealLogsForDate] SQLite error:', e);
+      }
     }
     return APP.mealCompleted;
   },
@@ -1468,9 +1472,10 @@ function renderDashboard() {
     const pmSess = todaySessions.find(s => s.session_type === 'PM');
     const bestSess = todaySessions.reduce((b, s) => (s.score||0) > (b?.score||0) ? s : b, null);
     const score = bestSess?.score || 0;
-    const streak = getStreak();
-    const weekStats = getWeekStats();
-    const weekScore = getWeeklyScore();
+    let streak = 0, weekStats = {completed:0,minutes:0,total:0}, weekScore = {avg:0,best:0,count:0};
+    try { streak = getStreak(); } catch(e) { console.warn('[dash] getStreak:', e); }
+    try { weekStats = getWeekStats(); } catch(e) { console.warn('[dash] getWeekStats:', e); }
+    try { weekScore = getWeeklyScore(); } catch(e) { console.warn('[dash] getWeeklyScore:', e); }
     const sched = getTodaySchedule();
     const amExs = getModifiedExercises(sched?.am?.exercises || [], APP.currentMode);
     const pmExs = getModifiedExercises(sched?.pm?.exercises || [], APP.currentMode);
