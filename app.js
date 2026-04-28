@@ -401,46 +401,61 @@ function normalizeSession(s) {
 
 const DB = {
   saveSession(s) {
+    // Always keep APP.sessions in sync for immediate in-memory fallback
+    APP.sessions = APP.sessions.filter(x => !(x.date === s.date && (x.type === s.type || x.session_type === s.type)));
+    APP.sessions.push({...s, session_type: s.type});
+
     if (APP.db) {
-      APP.db.run(
-        `INSERT INTO sessions (date,session_type,routine_name,duration_min,
-          exercises_completed,exercises_total,series_completed,energy,score,notes)
-         VALUES (?,?,?,?,?,?,?,?,?,?)`,
-        [s.date, s.type, s.routineName, s.duration||0,
-         s.exDone||0, s.exTotal||0, s.series||0, s.energy||3, s.score||0, s.notes||'']
-      );
-      const rows = APP.db.exec('SELECT last_insert_rowid()');
-      const id = rows[0]?.values[0][0];
-      saveDB();
-      return id;
+      try {
+        APP.db.run(
+          `INSERT INTO sessions (date,session_type,routine_name,duration_min,
+            exercises_completed,exercises_total,series_completed,energy,score,notes)
+           VALUES (?,?,?,?,?,?,?,?,?,?)`,
+          [s.date, s.type, s.routineName, s.duration||0,
+           s.exDone||0, s.exTotal||0, s.series||0, s.energy||3, s.score||0, s.notes||'']
+        );
+        const rows = APP.db.exec('SELECT last_insert_rowid()');
+        const id = rows[0]?.values[0][0];
+        saveDB();
+        return id;
+      } catch(e) {
+        console.warn('[DB.saveSession] SQLite error, falling back to localStorage:', e);
+      }
     }
-    const session = {...s, id: 'ls_'+Date.now()};
-    APP.sessions = APP.sessions.filter(x => !(x.date === s.date && x.type === s.type));
-    APP.sessions.push(session);
     saveToStorage();
-    return session.id;
+    return s.id || 'ls_' + Date.now();
   },
 
   getSessionsForDate(date) {
     if (APP.db) {
-      const rows = APP.db.exec(
-        `SELECT * FROM sessions WHERE date=? ORDER BY created_at DESC`, [date]
-      );
-      if (!rows[0]) return [];
-      const cols = rows[0].columns;
-      return rows[0].values.map(r => Object.fromEntries(cols.map((c,i) => [c,r[i]])));
+      try {
+        const rows = APP.db.exec(
+          `SELECT * FROM sessions WHERE date=? ORDER BY created_at DESC`, [date]
+        );
+        if (rows[0] && rows[0].values.length > 0) {
+          const cols = rows[0].columns;
+          return rows[0].values.map(r => Object.fromEntries(cols.map((c,i) => [c,r[i]])));
+        }
+      } catch(e) {
+        console.warn('[DB.getSessionsForDate] SQLite error:', e);
+      }
     }
     return APP.sessions.filter(s => s.date === date).map(normalizeSession);
   },
 
   getRecentSessions(n = 14) {
     if (APP.db) {
-      const rows = APP.db.exec(
-        `SELECT * FROM sessions ORDER BY date DESC, created_at DESC LIMIT ?`, [n]
-      );
-      if (!rows[0]) return [];
-      const cols = rows[0].columns;
-      return rows[0].values.map(r => Object.fromEntries(cols.map((c,i) => [c,r[i]])));
+      try {
+        const rows = APP.db.exec(
+          `SELECT * FROM sessions ORDER BY date DESC, created_at DESC`
+        );
+        if (rows[0] && rows[0].values.length > 0) {
+          const cols = rows[0].columns;
+          return rows[0].values.map(r => Object.fromEntries(cols.map((c,i) => [c,r[i]]))).slice(0, n);
+        }
+      } catch(e) {
+        console.warn('[DB.getRecentSessions] SQLite error:', e);
+      }
     }
     return [...APP.sessions].sort((a,b) => b.date.localeCompare(a.date)).slice(0, n).map(normalizeSession);
   },
@@ -522,11 +537,14 @@ const DB = {
 
   getStreakDates() {
     if (APP.db) {
-      const rows = APP.db.exec(
-        `SELECT DISTINCT date FROM sessions WHERE score > 0 ORDER BY date DESC LIMIT 30`
-      );
-      if (!rows[0]) return [];
-      return rows[0].values.map(r => r[0]);
+      try {
+        const rows = APP.db.exec(
+          `SELECT DISTINCT date FROM sessions WHERE score > 0 ORDER BY date DESC LIMIT 30`
+        );
+        if (rows[0] && rows[0].values.length > 0) return rows[0].values.map(r => r[0]);
+      } catch(e) {
+        console.warn('[DB.getStreakDates] SQLite error:', e);
+      }
     }
     return [...new Set(APP.sessions.filter(s => s.score > 0).map(s => s.date))].sort().reverse();
   }
@@ -1169,7 +1187,13 @@ function completeSession(type) {
     energy:      sessionData.energy
   });
 
-  DB.saveSession(sessionData);
+  try {
+    DB.saveSession(sessionData);
+  } catch(e) {
+    console.error('[completeSession] Error al guardar:', e);
+    showToast('⚠️ Error al guardar la sesión. Intenta de nuevo.', 'error');
+    return;
+  }
   showToast(`✅ Sesión ${type.toUpperCase()} guardada · Score: ${sessionData.score}`, 'success');
   navigateTo('dashboard');
 }
